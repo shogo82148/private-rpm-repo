@@ -1,0 +1,8 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: shogo private rpm repository
+Resources:
+  RPMBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: shogo82148-rpm-repository
+      AccessControl: PublicRead
