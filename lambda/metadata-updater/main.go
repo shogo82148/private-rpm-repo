@@ -242,6 +242,8 @@ func (c *myContext) configureGPG(ctx context.Context) error {
 }
 
 func (c *myContext) signRPM(ctx context.Context, name string) error {
+	log.Printf("signing %s", name)
+
 	cmd := exec.CommandContext(ctx, c.handler.rpm, "--addsign", name)
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
@@ -266,6 +268,7 @@ func (c *myContext) downloadRPM(ctx context.Context, record events.S3EventRecord
 		return "", err
 	}
 
+	log.Printf("downloading %s from %s", record.S3.Object.Key, record.S3.Bucket.Name)
 	_, err = c.handler.downloader.Download(ctx, f, &s3.GetObjectInput{
 		Bucket: aws.String(record.S3.Bucket.Name),
 		Key:    aws.String(record.S3.Object.Key),
@@ -280,6 +283,7 @@ func (c *myContext) downloadRPM(ctx context.Context, record events.S3EventRecord
 }
 
 func (c *myContext) createrepo(ctx context.Context) error {
+	log.Print("create repository")
 	cmd := exec.CommandContext(ctx, c.handler.createrepo, c.input)
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
