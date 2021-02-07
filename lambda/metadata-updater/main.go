@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,11 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
-
-var s3svc *s3.Client
-var downloader *manager.Downloader
-var uploader *manager.Uploader
-var outputBucket string
 
 // {
 //     "eventVersion": "2.1",
@@ -56,86 +52,211 @@ var outputBucket string
 //         }
 //     }
 // }
-func handleEvent(ctx context.Context, event events.S3Event) (string, error) {
-	dir, err := ioutil.TempDir("/tmp/", "updater-")
-	if err != nil {
-		return "", err
-	}
-	defer os.RemoveAll(dir) // clean up
 
-	repo := filepath.Join(dir, "repo")
-	home := filepath.Join(dir, "home")
+type handler struct {
+	s3svc        *s3.Client
+	downloader   *manager.Downloader
+	uploader     *manager.Uploader
+	outputBucket string
 
-	err = ioutil.WriteFile(filepath.Join(home, ".rpmmacros"), []byte(`%_signature gpg
-%_gpg_name Ichinose Shogo <shogo82148@gmail.com>
-`), 0600)
+	// full paths for tools
+	rpm        string
+	gpg        string
+	createrepo string
+}
+
+func newHandler(ctx context.Context) (*handler, error) {
+	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
+	s3svc := s3.NewFromConfig(cfg)
+	downloader := manager.NewDownloader(s3svc)
+	uploader := manager.NewUploader(s3svc)
+	outputBucket := os.Getenv("OUTPUT_BUCKET")
 
 	rpm, err := exec.LookPath("rpm")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	for _, record := range event.Records {
-		name, err := download(ctx, repo, record)
-		if err != nil {
-			return "", err
-		}
-		cmd := exec.CommandContext(ctx, rpm, "--addsign", name)
-		cmd.Stdout = os.Stderr
-		cmd.Stderr = os.Stderr
-		cmd.Env = []string{
-			"HOME=" + home,
-		}
-		if err := cmd.Run(); err != nil {
-			return "", err
-		}
+	gpg, err := exec.LookPath("gpg")
+	if err != nil {
+		return nil, err
 	}
-
 	createrepo, err := exec.LookPath("createrepo")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	cmd := exec.CommandContext(ctx, createrepo, repo)
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return "", err
-	}
-
-	err = filepath.Walk(repo, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		rel, err := filepath.Rel(repo, path)
-		if err != nil {
-			return err
-		}
-		f, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		_, err = uploader.Upload(ctx, &s3.PutObjectInput{
-			Bucket: aws.String(outputBucket),
-			Key:    aws.String(filepath.ToSlash(rel)),
-			Body:   f,
-		})
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-
-	return "Hello ƛ!", nil
+	return &handler{
+		s3svc:        s3svc,
+		downloader:   downloader,
+		uploader:     uploader,
+		outputBucket: outputBucket,
+		rpm:          rpm,
+		gpg:          gpg,
+		createrepo:   createrepo,
+	}, nil
 }
 
-func download(ctx context.Context, dir string, record events.S3EventRecord) (string, error) {
-	name := filepath.Join(dir, filepath.FromSlash(record.S3.Object.URLDecodedKey))
+func (h *handler) handleEvent(ctx context.Context, event events.S3Event) error {
+	c, err := h.newContext(event)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	defer c.Cleanup()
+	if err := c.handle(ctx); err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (h *handler) newContext(event events.S3Event) (*myContext, error) {
+	dir, err := ioutil.TempDir("/tmp/", "updater-")
+	if err != nil {
+		return nil, err
+	}
+
+	home := filepath.Join(dir, "home")
+	if err := os.MkdirAll(home, 0700); err != nil {
+		os.RemoveAll(dir)
+		return nil, err
+	}
+
+	base := filepath.Join(dir, "base")
+	if err := os.MkdirAll(base, 0700); err != nil {
+		os.RemoveAll(dir)
+		return nil, err
+	}
+
+	input := filepath.Join(dir, "input")
+	if err := os.MkdirAll(input, 0700); err != nil {
+		os.RemoveAll(dir)
+		return nil, err
+	}
+
+	output := filepath.Join(dir, "output")
+	if err := os.MkdirAll(output, 0700); err != nil {
+		os.RemoveAll(dir)
+		return nil, err
+	}
+
+	return &myContext{
+		handler: h,
+		event:   event,
+		dir:     dir,
+		home:    home,
+		base:    base,
+		input:   input,
+		output:  output,
+	}, nil
+}
+
+type myContext struct {
+	handler *handler
+
+	event events.S3Event
+
+	// temporary directory
+	dir string
+
+	// dummy home directory
+	home string
+
+	// old repository metadata
+	base string
+
+	// for new rpm files
+	input string
+
+	// new repository metadata
+	output string
+}
+
+func (c *myContext) handle(ctx context.Context) error {
+	if err := c.configureGPG(ctx); err != nil {
+		return err
+	}
+
+	for _, record := range c.event.Records {
+		name, err := c.downloadRPM(ctx, record)
+		if err != nil {
+			return err
+		}
+		if err := c.signRPM(ctx, name); err != nil {
+			return err
+		}
+	}
+
+	if err := c.createrepo(ctx); err != nil {
+		return err
+	}
+
+	// err = filepath.Walk(repo, func(path string, info os.FileInfo, err error) error {
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	if info.IsDir() {
+	// 		return nil
+	// 	}
+	// 	rel, err := filepath.Rel(repo, path)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	f, err := os.Open(path)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	defer f.Close()
+	// 	_, err = uploader.Upload(ctx, &s3.PutObjectInput{
+	// 		Bucket: aws.String(outputBucket),
+	// 		Key:    aws.String(filepath.ToSlash(rel)),
+	// 		Body:   f,
+	// 	})
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	return nil
+	// })
+
+	return nil
+}
+
+func (c *myContext) Cleanup() {
+	os.RemoveAll(c.dir)
+}
+
+func (c *myContext) configureGPG(ctx context.Context) error {
+	// TODO: make GPG name configureable
+	err := ioutil.WriteFile(filepath.Join(c.home, ".rpmmacros"), []byte(`%_signature gpg
+%_gpg_name Ichinose Shogo <shogo82148@gmail.com>
+`), 0600)
+	if err != nil {
+		return err
+	}
+
+	// TODO: import secret key
+
+	return nil
+}
+
+func (c *myContext) signRPM(ctx context.Context, name string) error {
+	cmd := exec.CommandContext(ctx, c.handler.rpm, "--addsign", name)
+	cmd.Stdout = os.Stderr
+	cmd.Stderr = os.Stderr
+	cmd.Env = []string{
+		"HOME=" + c.home,
+	}
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// download rpm files into the input directory
+func (c *myContext) downloadRPM(ctx context.Context, record events.S3EventRecord) (string, error) {
+	name := filepath.Join(c.input, filepath.FromSlash(record.S3.Object.URLDecodedKey))
 	if err := os.MkdirAll(filepath.Dir(name), 0700); err != nil {
 		return "", err
 	}
@@ -145,7 +266,7 @@ func download(ctx context.Context, dir string, record events.S3EventRecord) (str
 		return "", err
 	}
 
-	_, err = downloader.Download(ctx, f, &s3.GetObjectInput{
+	_, err = c.handler.downloader.Download(ctx, f, &s3.GetObjectInput{
 		Bucket: aws.String(record.S3.Bucket.Name),
 		Key:    aws.String(record.S3.Object.Key),
 	})
@@ -158,15 +279,20 @@ func download(ctx context.Context, dir string, record events.S3EventRecord) (str
 	return name, nil
 }
 
-func main() {
-	cfg, err := config.LoadDefaultConfig(context.Background())
-	if err != nil {
-		panic(err)
+func (c *myContext) createrepo(ctx context.Context) error {
+	cmd := exec.CommandContext(ctx, c.handler.createrepo, c.input)
+	cmd.Stdout = os.Stderr
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return err
 	}
-	s3svc = s3.NewFromConfig(cfg)
-	downloader = manager.NewDownloader(s3svc)
-	uploader = manager.NewUploader(s3svc)
-	outputBucket = os.Getenv("OUTPUT_BUCKET")
+	return nil
+}
 
-	lambda.Start(handleEvent)
+func main() {
+	h, err := newHandler(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	lambda.Start(h.handleEvent)
 }
