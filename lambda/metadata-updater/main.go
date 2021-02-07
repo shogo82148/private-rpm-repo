@@ -239,6 +239,7 @@ func (c *myContext) configureGPG(ctx context.Context) error {
 	// TODO: make GPG name configureable
 	err := ioutil.WriteFile(filepath.Join(c.home, ".rpmmacros"), []byte(`%_signature gpg
 %_gpg_name Ichinose Shogo <shogo82148@gmail.com>
+%_tmppath /tmp
 `), 0600)
 	if err != nil {
 		return err
@@ -263,7 +264,6 @@ func (c *myContext) configureGPG(ctx context.Context) error {
 	cmd.Stderr = os.Stderr
 	cmd.Env = []string{
 		"HOME=" + c.home,
-		"TMPDIR=/tmp",
 	}
 	if err := cmd.Run(); err != nil {
 		return err
