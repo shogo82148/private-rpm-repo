@@ -18,6 +18,7 @@ import (
 var s3svc *s3.Client
 var downloader *manager.Downloader
 var uploader *manager.Uploader
+var outputBucket string
 
 // {
 //     "eventVersion": "2.1",
@@ -76,6 +77,33 @@ func handleEvent(ctx context.Context, event events.S3Event) (string, error) {
 		return "", err
 	}
 
+	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			return err
+		}
+		f, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		_, err = uploader.Upload(ctx, &s3.PutObjectInput{
+			Bucket: aws.String(outputBucket),
+			Key:    aws.String(filepath.ToSlash(rel)),
+			Body:   f,
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
 	return "Hello ƛ!", nil
 }
 
@@ -108,6 +136,7 @@ func main() {
 	s3svc = s3.NewFromConfig(cfg)
 	downloader = manager.NewDownloader(s3svc)
 	uploader = manager.NewUploader(s3svc)
+	outputBucket = os.Getenv("OUTPUT_BUCKET")
 
 	lambda.Start(handleEvent)
 }

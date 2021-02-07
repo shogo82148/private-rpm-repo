@@ -35,9 +35,13 @@ Resources:
             Events: s3:ObjectCreated:*
       Policies:
         - S3ReadPolicy:
-            BucketName: !Ref RPMTemporaryBucket
+            # we can't write "!Ref RPMTemporaryBucket" because of Circular dependency between resources
+            BucketName: shogo82148-rpm-temporary
         - S3CrudPolicy:
             BucketName: !Ref RPMBucket
+      Environment:
+        Variables:
+          OUTPUT_BUCKET: !Ref RPMBucket
     Metadata:
       DockerTag: latest
       DockerContext: ./metadata-updater
