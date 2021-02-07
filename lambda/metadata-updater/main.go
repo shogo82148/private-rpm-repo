@@ -245,7 +245,7 @@ func (c *myContext) configureGPG(ctx context.Context) error {
 	}
 
 	out, err := c.handler.ssmsvc.GetParameter(ctx, &ssm.GetParameterInput{
-		Name:           aws.String(c.handler.secretParamPath),
+		Name:           aws.String("/" + c.handler.secretParamPath),
 		WithDecryption: true,
 	})
 	if err != nil {
@@ -263,6 +263,7 @@ func (c *myContext) configureGPG(ctx context.Context) error {
 	cmd.Stderr = os.Stderr
 	cmd.Env = []string{
 		"HOME=" + c.home,
+		"TMPDIR=/tmp",
 	}
 	if err := cmd.Run(); err != nil {
 		return err
