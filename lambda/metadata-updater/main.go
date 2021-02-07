@@ -63,18 +63,34 @@ func handleEvent(ctx context.Context, event events.S3Event) (string, error) {
 	}
 	defer os.RemoveAll(dir) // clean up
 
+	repo := filepath.Join(dir, "repo")
+	home := filepath.Join(dir, "home")
+
+	err = ioutil.WriteFile(filepath.Join(home, ".rpmmacros"), []byte(`%_signature gpg
+%_gpg_name Ichinose Shogo <shogo82148@gmail.com>
+`), 0600)
+	if err != nil {
+		return "", err
+	}
+	if err != nil {
+		return "", err
+	}
+
 	rpm, err := exec.LookPath("rpm")
 	if err != nil {
 		return "", err
 	}
 	for _, record := range event.Records {
-		name, err := download(ctx, dir, record)
+		name, err := download(ctx, repo, record)
 		if err != nil {
 			return "", err
 		}
 		cmd := exec.CommandContext(ctx, rpm, "--addsign", name)
 		cmd.Stdout = os.Stderr
 		cmd.Stderr = os.Stderr
+		cmd.Env = []string{
+			"HOME=" + home,
+		}
 		if err := cmd.Run(); err != nil {
 			return "", err
 		}
@@ -84,21 +100,21 @@ func handleEvent(ctx context.Context, event events.S3Event) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	cmd := exec.CommandContext(ctx, createrepo, dir)
+	cmd := exec.CommandContext(ctx, createrepo, repo)
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		return "", err
 	}
 
-	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(repo, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if info.IsDir() {
 			return nil
 		}
-		rel, err := filepath.Rel(dir, path)
+		rel, err := filepath.Rel(repo, path)
 		if err != nil {
 			return err
 		}
