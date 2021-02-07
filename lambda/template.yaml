@@ -39,9 +39,12 @@ Resources:
             BucketName: shogo82148-rpm-temporary
         - S3CrudPolicy:
             BucketName: !Ref RPMBucket
+        - SSMParameterReadPolicy:
+            ParameterName: "/shogo82148/gpg/secret"
       Environment:
         Variables:
           OUTPUT_BUCKET: !Ref RPMBucket
+          GPG_SECRET_KEY: "/shogo82148/gpg/secret"
     Metadata:
       DockerTag: latest
       DockerContext: ./metadata-updater

@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 )
 
 // {
@@ -57,7 +58,11 @@ type handler struct {
 	s3svc        *s3.Client
 	downloader   *manager.Downloader
 	uploader     *manager.Uploader
+	ssmsvc       *ssm.Client
 	outputBucket string
+
+	// the parameter path for GPG secret key
+	secretParamPath string
 
 	// full paths for tools
 	rpm        string
@@ -73,7 +78,7 @@ func newHandler(ctx context.Context) (*handler, error) {
 	s3svc := s3.NewFromConfig(cfg)
 	downloader := manager.NewDownloader(s3svc)
 	uploader := manager.NewUploader(s3svc)
-	outputBucket := os.Getenv("OUTPUT_BUCKET")
+	ssmsvc := ssm.NewFromConfig(cfg)
 
 	rpm, err := exec.LookPath("rpm")
 	if err != nil {
@@ -87,14 +92,17 @@ func newHandler(ctx context.Context) (*handler, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &handler{
-		s3svc:        s3svc,
-		downloader:   downloader,
-		uploader:     uploader,
-		outputBucket: outputBucket,
-		rpm:          rpm,
-		gpg:          gpg,
-		createrepo:   createrepo,
+		s3svc:           s3svc,
+		downloader:      downloader,
+		uploader:        uploader,
+		ssmsvc:          ssmsvc,
+		outputBucket:    os.Getenv("OUTPUT_BUCKET"),
+		secretParamPath: os.Getenv("GPG_SECRET_KEY"),
+		rpm:             rpm,
+		gpg:             gpg,
+		createrepo:      createrepo,
 	}, nil
 }
 
@@ -236,8 +244,29 @@ func (c *myContext) configureGPG(ctx context.Context) error {
 		return err
 	}
 
-	// TODO: import secret key
+	out, err := c.handler.ssmsvc.GetParameter(ctx, &ssm.GetParameterInput{
+		Name:           aws.String(c.handler.secretParamPath),
+		WithDecryption: true,
+	})
+	if err != nil {
+		return err
+	}
 
+	key := filepath.Join(c.home, "secret.asc")
+	err = ioutil.WriteFile(key, []byte(aws.ToString(out.Parameter.Value)), 0600)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.CommandContext(ctx, c.handler.gpg, "--import", key)
+	cmd.Stdout = os.Stderr
+	cmd.Stderr = os.Stderr
+	cmd.Env = []string{
+		"HOME=" + c.home,
+	}
+	if err := cmd.Run(); err != nil {
+		return err
+	}
 	return nil
 }
 
