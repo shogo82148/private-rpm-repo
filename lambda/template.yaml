@@ -33,6 +33,11 @@ Resources:
           Properties:
             Bucket: !Ref RPMTemporaryBucket
             Events: s3:ObjectCreated:*
+      Policies:
+        - S3ReadPolicy:
+            bucketName: !Ref RPMTemporaryBucket
+        - S3CrudPolicy:
+            bucketName: !Ref RPMBucket
     Metadata:
       DockerTag: latest
       DockerContext: ./metadata-updater
