@@ -72,8 +72,10 @@ func handleEvent(ctx context.Context, event events.S3Event) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		err = exec.CommandContext(ctx, rpm, "--addsign", name).Run()
-		if err != nil {
+		cmd := exec.CommandContext(ctx, rpm, "--addsign", name)
+		cmd.Stdout = os.Stderr
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
 			return "", err
 		}
 	}
@@ -82,7 +84,10 @@ func handleEvent(ctx context.Context, event events.S3Event) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if err := exec.CommandContext(ctx, createrepo, dir).Run(); err != nil {
+	cmd := exec.CommandContext(ctx, createrepo, dir)
+	cmd.Stdout = os.Stderr
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
 		return "", err
 	}
 
