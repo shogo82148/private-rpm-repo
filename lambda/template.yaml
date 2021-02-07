@@ -27,6 +27,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
+      Timeout: 900
       Events:
         S3Event:
           Type: S3
