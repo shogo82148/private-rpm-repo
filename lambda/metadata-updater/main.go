@@ -63,8 +63,17 @@ func handleEvent(ctx context.Context, event events.S3Event) (string, error) {
 	}
 	defer os.RemoveAll(dir) // clean up
 
+	rpm, err := exec.LookPath("rpm")
+	if err != nil {
+		return "", err
+	}
 	for _, record := range event.Records {
-		if err := download(ctx, dir, record); err != nil {
+		name, err := download(ctx, dir, record)
+		if err != nil {
+			return "", err
+		}
+		err = exec.CommandContext(ctx, rpm, "--addsign", name).Run()
+		if err != nil {
 			return "", err
 		}
 	}
@@ -107,15 +116,15 @@ func handleEvent(ctx context.Context, event events.S3Event) (string, error) {
 	return "Hello ƛ!", nil
 }
 
-func download(ctx context.Context, dir string, record events.S3EventRecord) error {
+func download(ctx context.Context, dir string, record events.S3EventRecord) (string, error) {
 	name := filepath.Join(dir, filepath.FromSlash(record.S3.Object.URLDecodedKey))
 	if err := os.MkdirAll(filepath.Dir(name), 0700); err != nil {
-		return err
+		return "", err
 	}
 
 	f, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	_, err = downloader.Download(ctx, f, &s3.GetObjectInput{
@@ -125,7 +134,10 @@ func download(ctx context.Context, dir string, record events.S3EventRecord) erro
 	if err1 := f.Close(); err == nil {
 		err = err1
 	}
-	return err
+	if err != nil {
+		return "", err
+	}
+	return name, nil
 }
 
 func main() {
