@@ -10,7 +10,7 @@ RUN go build -tags lambda.norpc -o bootstrap main.go
 
 FROM amazon/aws-lambda-provided:al2
 
-RUN yum update -y && yum install -y createrepo && rm -rf /var/cache/yum/* && yum clean all
+RUN yum update -y && yum install -y createrepo_c rpm-sign && rm -rf /var/cache/yum/* && yum clean all
 
 COPY --from=0 /go/metadata-updater/bootstrap /var/runtime/bootstrap
 CMD [ "metadata-updater" ]
