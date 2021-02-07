@@ -72,9 +72,6 @@ func handleEvent(ctx context.Context, event events.S3Event) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if err != nil {
-		return "", err
-	}
 
 	rpm, err := exec.LookPath("rpm")
 	if err != nil {
