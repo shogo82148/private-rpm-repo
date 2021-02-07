@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: shogo private rpm repository
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  RPMBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: shogo82148-rpm-repository
+      AccessControl: PublicRead
+
+  RPMTemporaryBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: shogo82148-rpm-temporary
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  MetadataUpdater:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Events:
+        S3Event:
+          Type: S3
+          Properties:
+            Bucket: !Ref RPMTemporaryBucket
+            Events: s3:ObjectCreated:*
+    Metadata:
+      DockerTag: latest
+      DockerContext: ./metadata-updater
+      Dockerfile: Dockerfile

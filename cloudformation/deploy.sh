@@ -2,8 +2,9 @@
 
 ROOT=$(cd "$(dirname "$0")" && pwd)
 
-aws cloudformation deploy \
+set -xue
+
+sam deploy \
     --region ap-northeast-1 \
     --stack-name "rpm-repository" \
-    --template-file "${ROOT}/template.yaml" \
-    --parameter-overrides "Environment=${APP_ENV}"
+    --template-file "${ROOT}/template.yaml"

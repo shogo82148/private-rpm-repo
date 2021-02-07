@@ -1,23 +1,8 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: shogo private rpm repository
-Resources:
-  RPMBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      BucketName: shogo82148-rpm-repository
-      AccessControl: PublicRead
 
-  RPMTemporaryBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
+Resources:
+  ECRForLambda:
+    Type: AWS::ECR::Repository
     Properties:
-      BucketName: shogo82148-rpm-temporary
-      AccessControl: PublicRead
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
+      RepositoryName: rpm-metadata-updater

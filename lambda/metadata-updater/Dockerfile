@@ -1,0 +1,16 @@
+FROM golang:1.15
+
+RUN mkdir -p /go/metadata-updater
+WORKDIR /go/metadata-updater
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+COPY main.go .
+RUN go build -tags lambda.norpc -o bootstrap main.go
+
+FROM amazon/aws-lambda-provided:al2
+
+RUN yum update -y && yum install -y createrepo && rm -rf /var/cache/yum/* && yum clean all
+
+COPY --from=0 /go/metadata-updater/bootstrap /var/runtime/bootstrap
+CMD [ "metadata-updater" ]
