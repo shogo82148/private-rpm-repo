@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -54,6 +56,8 @@ import (
 //     }
 // }
 
+var errSkipped = errors.New("updater: file skipped")
+
 type handler struct {
 	s3svc        *s3.Client
 	downloader   *manager.Downloader
@@ -71,6 +75,7 @@ type handler struct {
 }
 
 func newHandler(ctx context.Context) (*handler, error) {
+	// configure AWS clients
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, err
@@ -80,6 +85,7 @@ func newHandler(ctx context.Context) (*handler, error) {
 	uploader := manager.NewUploader(s3svc)
 	ssmsvc := ssm.NewFromConfig(cfg)
 
+	// lookup executables
 	rpm, err := exec.LookPath("rpm")
 	if err != nil {
 		return nil, err
@@ -190,6 +196,9 @@ func (c *myContext) handle(ctx context.Context) error {
 	for _, record := range c.event.Records {
 		name, err := c.downloadRPM(ctx, record)
 		if err != nil {
+			if errors.Is(err, errSkipped) {
+				continue
+			}
 			return err
 		}
 		if err := c.signRPM(ctx, name); err != nil {
@@ -288,7 +297,18 @@ func (c *myContext) signRPM(ctx context.Context, name string) error {
 
 // download rpm files into the input directory
 func (c *myContext) downloadRPM(ctx context.Context, record events.S3EventRecord) (string, error) {
+	data, err := json.Marshal(record)
+	if err != nil {
+		return "", err
+	}
+	log.Println(string(data))
+
 	name := filepath.Join(c.input, filepath.FromSlash(record.S3.Object.URLDecodedKey))
+	ext := filepath.Ext(name)
+	if ext != ".rpm" {
+		return "", errSkipped
+	}
+
 	if err := os.MkdirAll(filepath.Dir(name), 0700); err != nil {
 		return "", err
 	}
@@ -310,6 +330,10 @@ func (c *myContext) downloadRPM(ctx context.Context, record events.S3EventRecord
 		return "", err
 	}
 	return name, nil
+}
+
+func (c myContext) downloadMetadata(ctx context.Context) error {
+	return nil
 }
 
 func (c *myContext) createrepo(ctx context.Context) error {
