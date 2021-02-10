@@ -23,7 +23,7 @@ import (
 //     "eventVersion": "2.1",
 //     "eventSource": "aws:s3",
 //     "awsRegion": "ap-northeast-1",
-//     "eventTime": "2021-02-07T14:03:05.055Z",
+//     "eventTime": "2021-02-10T04:38:28.261Z",
 //     "eventName": "ObjectCreated:Put",
 //     "userIdentity": {
 //         "principalId": "AWS:AIDAIIYTLRUFSSQXNUPU2"
@@ -32,8 +32,8 @@ import (
 //         "sourceIPAddress": "60.47.1.228"
 //     },
 //     "responseElements": {
-//         "x-amz-id-2": "RY9/nKt11cMK0f/dPBg0keP3VyR9zNRw7Jy2y9GxDOY0gbBN2EbwuU1S9vn0OacyBChqvJLmP7+xNEzu5J6UPsH/bqZtgJeK",
-//         "x-amz-request-id": "BE14F554EE9611DA"
+//         "x-amz-id-2": "AgU98Ub9HHSq8p0q3e986ETpenuPJw//FZEceVACCWFDMP9/JXarviV4zQVLHrKB6zCFI29LdGY430Ry5NV4oD+8f4k23Xjd",
+//         "x-amz-request-id": "B1FE8CDA6F9702B3"
 //     },
 //     "s3": {
 //         "s3SchemaVersion": "1.0",
@@ -46,12 +46,12 @@ import (
 //             "arn": "arn:aws:s3:::shogo82148-rpm-temporary"
 //         },
 //         "object": {
-//             "key": "h2o-2.2.5-2.amzn2.x86_64.rpm",
-//             "size": 2747616,
-//             "urlDecodedKey": "h2o-2.2.5-2.amzn2.x86_64.rpm",
+//             "key": "amazonlinux/2/x86_64/h2o-2.2.6-1.amzn2.x86_64.rpm",
+//             "size": 2716232,
+//             "urlDecodedKey": "amazonlinux/2/x86_64/h2o-2.2.6-1.amzn2.x86_64.rpm",
 //             "versionId": "",
-//             "eTag": "b3bbd851f65c03c33a8552ce6a080f3c",
-//             "sequencer": "00601FF31C767E02C8"
+//             "eTag": "ee6c2655afcee02c0f32f469be9b3a29",
+//             "sequencer": "0060236347394C03FE"
 //         }
 //     }
 // }
@@ -210,32 +210,9 @@ func (c *myContext) handle(ctx context.Context) error {
 		return err
 	}
 
-	// err = filepath.Walk(repo, func(path string, info os.FileInfo, err error) error {
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	if info.IsDir() {
-	// 		return nil
-	// 	}
-	// 	rel, err := filepath.Rel(repo, path)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	f, err := os.Open(path)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	defer f.Close()
-	// 	_, err = uploader.Upload(ctx, &s3.PutObjectInput{
-	// 		Bucket: aws.String(outputBucket),
-	// 		Key:    aws.String(filepath.ToSlash(rel)),
-	// 		Body:   f,
-	// 	})
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	return nil
-	// })
+	if err := c.uploadRPM(ctx); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -345,6 +322,47 @@ func (c *myContext) createrepo(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+func (c *myContext) uploadRPM(ctx context.Context) error {
+	dir := c.input
+	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// skip directories
+		if info.IsDir() {
+			return nil
+		}
+
+		// we accepts .rpm only
+		ext := filepath.Ext(path)
+		if ext != ".rpm" {
+			return nil
+		}
+
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			return err
+		}
+		f, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		key := filepath.ToSlash(rel)
+		log.Printf("uploading %s to %s", key, c.handler.outputBucket)
+		_, err = c.handler.uploader.Upload(ctx, &s3.PutObjectInput{
+			Bucket: aws.String(c.handler.outputBucket),
+			Key:    aws.String(key),
+			Body:   f,
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func main() {
