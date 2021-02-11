@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"log"
+	"mime"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -432,12 +433,14 @@ func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
 		defer f.Close()
 
 		key := filepath.ToSlash(rel)
+		ext := filepath.Ext(path)
 		log.Printf("uploading %s to %s", key, c.handler.outputBucket)
 		_, err = c.handler.uploader.Upload(ctx, &s3.PutObjectInput{
-			Bucket: aws.String(c.handler.outputBucket),
-			Key:    aws.String(key),
-			ACL:    s3types.ObjectCannedACLPublicRead,
-			Body:   f,
+			Bucket:      aws.String(c.handler.outputBucket),
+			Key:         aws.String(key),
+			ACL:         s3types.ObjectCannedACLPublicRead,
+			ContentType: aws.String(mime.TypeByExtension(ext)),
+			Body:        f,
 		})
 		if err != nil {
 			return err
@@ -476,10 +479,11 @@ func (c *myContext) uploadRPM(ctx context.Context) error {
 		key := filepath.ToSlash(rel)
 		log.Printf("uploading %s to %s", key, c.handler.outputBucket)
 		_, err = c.handler.uploader.Upload(ctx, &s3.PutObjectInput{
-			Bucket: aws.String(c.handler.outputBucket),
-			Key:    aws.String(key),
-			ACL:    s3types.ObjectCannedACLPublicRead,
-			Body:   f,
+			Bucket:      aws.String(c.handler.outputBucket),
+			Key:         aws.String(key),
+			ACL:         s3types.ObjectCannedACLPublicRead,
+			ContentType: aws.String(mime.TypeByExtension(ext)),
+			Body:        f,
 		})
 		if err != nil {
 			return err
