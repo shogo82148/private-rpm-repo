@@ -229,6 +229,9 @@ func (c *myContext) handle(ctx context.Context) error {
 		if err := c.downloadMetadata(ctx, repo); err != nil {
 			return err
 		}
+		if err := c.mergerepo(ctx, repo); err != nil {
+			return err
+		}
 	}
 
 	if err := c.uploadRPM(ctx); err != nil {
@@ -404,6 +407,43 @@ func (c *myContext) mergerepo(ctx context.Context, repo string) error {
 		return err
 	}
 	return nil
+}
+
+func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
+	log.Printf("upload metadata for %s", repo)
+	dir := c.output
+	return filepath.Walk(filepath.Join(c.output, "repodata"), func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// skip directories
+		if info.IsDir() {
+			return nil
+		}
+
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			return err
+		}
+		f, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		key := filepath.ToSlash(rel)
+		log.Printf("uploading %s to %s", key, c.handler.outputBucket)
+		_, err = c.handler.uploader.Upload(ctx, &s3.PutObjectInput{
+			Bucket: aws.String(c.handler.outputBucket),
+			Key:    aws.String(key),
+			ACL:    s3types.ObjectCannedACLPublicRead,
+			Body:   f,
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (c *myContext) uploadRPM(ctx context.Context) error {
