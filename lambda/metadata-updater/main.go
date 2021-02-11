@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -68,6 +69,9 @@ type handler struct {
 
 	// the parameter path for GPG secret key
 	secretParamPath string
+
+	// directory structure
+	depth int
 
 	// full paths for tools
 	rpm        string
@@ -207,8 +211,15 @@ func (c *myContext) handle(ctx context.Context) error {
 		}
 	}
 
-	if err := c.createrepo(ctx); err != nil {
+	repos, err := c.listRepos(ctx)
+	if err != nil {
 		return err
+	}
+
+	for _, repo := range repos {
+		if err := c.createrepo(ctx, repo); err != nil {
+			return err
+		}
 	}
 
 	if err := c.uploadRPM(ctx); err != nil {
@@ -310,13 +321,43 @@ func (c *myContext) downloadRPM(ctx context.Context, record events.S3EventRecord
 	return name, nil
 }
 
+func (c myContext) listRepos(ctx context.Context) ([]string, error) {
+	dir := c.input
+	var repos []string
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			return nil
+		}
+
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			return err
+		}
+		dirs := strings.Split(filepath.ToSlash(rel), "/")
+		if len(dirs) == c.handler.depth {
+			repos = append(repos, rel)
+			return filepath.SkipDir
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return repos, nil
+}
+
 func (c myContext) downloadMetadata(ctx context.Context) error {
 	return nil
 }
 
-func (c *myContext) createrepo(ctx context.Context) error {
-	log.Print("create repository")
-	cmd := exec.CommandContext(ctx, c.handler.createrepo, c.input)
+func (c *myContext) createrepo(ctx context.Context, repo string) error {
+	log.Printf("create repository for %s", repo)
+	path := filepath.Join(c.input, repo)
+	cmd := exec.CommandContext(ctx, c.handler.createrepo, path)
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
