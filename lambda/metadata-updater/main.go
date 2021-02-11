@@ -474,11 +474,11 @@ func (c *myContext) createrepo(ctx context.Context, repo string) error {
 
 func (c *myContext) mergerepo(ctx context.Context, repo string) error {
 	log.Printf("merge repository for %s", repo)
-	repo1 := filepath.Join(c.base, repo)
-	repo2 := filepath.Join(c.input, repo)
+	repo1 := filepath.Join(c.input, repo)
+	repo2 := filepath.Join(c.base, repo)
 	out := filepath.Join(c.output, repo)
 	cmd := exec.CommandContext(
-		ctx, c.handler.mergerepo, "--database", "--omit-baseurl", "--repo", repo1, "--repo", repo2, "--outputdir", out,
+		ctx, c.handler.mergerepo, "--database", "--omit-baseurl", "--all", "--repo", repo1, "--repo", repo2, "--outputdir", out,
 	)
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
