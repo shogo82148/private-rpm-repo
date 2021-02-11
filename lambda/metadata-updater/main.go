@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"io/ioutil"
 	"log"
@@ -367,6 +368,23 @@ func (c myContext) listRepos(ctx context.Context) ([]string, error) {
 	return repos, nil
 }
 
+type repomd struct {
+	Revision string `xml:"revision"`
+	Data     []data `xml:"data"`
+}
+
+type data struct {
+	Type      string   `xml:"type,attr"`
+	Timestamp int64    `xml:"timestamp"`
+	Location  location `xml:"location"`
+	Size      int64    `xml:"size"`
+	OpenSize  int64    `xml:"open-size"`
+}
+
+type location struct {
+	Href string `xml:"href,attr"`
+}
+
 func (c myContext) downloadMetadata(ctx context.Context, repo string) error {
 	log.Printf("download metadata for %s", repo)
 
@@ -394,6 +412,21 @@ func (c myContext) downloadMetadata(ctx context.Context, repo string) error {
 			// initialize the repository.
 			return c.createEmptyRepo(ctx, repo)
 		}
+	}
+
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	var metadata repomd
+	if err := xml.Unmarshal(data, &metadata); err != nil {
+		return err
+	}
+
+	for _, data := range metadata.Data {
+		log.Println("location: ", data.Location.Href)
+		log.Println("size: ", data.Size)
+		log.Println("open-size: ", data.OpenSize)
 	}
 
 	return nil
