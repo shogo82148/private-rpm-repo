@@ -117,6 +117,7 @@ func newHandler(ctx context.Context) (*handler, error) {
 		ssmsvc:          ssmsvc,
 		outputBucket:    os.Getenv("OUTPUT_BUCKET"),
 		secretParamPath: os.Getenv("GPG_SECRET_KEY"),
+		depth:           3, // $distribution/$releasever/$basearch
 		rpm:             rpm,
 		gpg:             gpg,
 		createrepo:      createrepo,
@@ -233,10 +234,12 @@ func (c *myContext) handle(ctx context.Context) error {
 		if err := c.mergerepo(ctx, repo); err != nil {
 			return err
 		}
-	}
-
-	if err := c.uploadRPM(ctx); err != nil {
-		return err
+		if err := c.uploadRPM(ctx, repo); err != nil {
+			return err
+		}
+		if err := c.uploadMetadata(ctx, repo); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -413,7 +416,8 @@ func (c *myContext) mergerepo(ctx context.Context, repo string) error {
 func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
 	log.Printf("upload metadata for %s", repo)
 	dir := c.output
-	return filepath.Walk(filepath.Join(c.output, "repodata"), func(path string, info os.FileInfo, err error) error {
+	root := filepath.Join(c.output, "repodata")
+	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -449,9 +453,10 @@ func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
 	})
 }
 
-func (c *myContext) uploadRPM(ctx context.Context) error {
+func (c *myContext) uploadRPM(ctx context.Context, repo string) error {
 	dir := c.input
-	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	root := filepath.Join(dir, repo)
+	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
