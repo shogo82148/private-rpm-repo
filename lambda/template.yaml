@@ -23,6 +23,13 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
 
+  Locker:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+
   MetadataUpdater:
     Type: AWS::Serverless::Function
     Properties:
@@ -43,10 +50,13 @@ Resources:
             BucketName: !Ref RPMBucket
         - SSMParameterReadPolicy:
             ParameterName: "shogo82148/gpg/secret"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Locker
       Environment:
         Variables:
           OUTPUT_BUCKET: !Ref RPMBucket
           GPG_SECRET_KEY: "shogo82148/gpg/secret"
+          LOCKER_TABLE: !Ref Locker
     Metadata:
       DockerTag: latest
       DockerContext: ./metadata-updater
