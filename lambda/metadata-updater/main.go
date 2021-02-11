@@ -12,16 +12,21 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	dbtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/smithy-go"
+	"github.com/shogo82148/go-retry"
 )
 
 // {
@@ -64,17 +69,21 @@ import (
 var errSkipped = errors.New("updater: file skipped")
 
 type handler struct {
-	s3svc        *s3.Client
-	downloader   *manager.Downloader
-	uploader     *manager.Uploader
-	ssmsvc       *ssm.Client
 	outputBucket string
+	lockTable    string
 
 	// the parameter path for GPG secret key
 	secretParamPath string
 
 	// directory structure
 	depth int
+
+	// Clients for aws services
+	s3svc       *s3.Client
+	downloader  *manager.Downloader
+	uploader    *manager.Uploader
+	ssmsvc      *ssm.Client
+	dynamodbsvc *dynamodb.Client
 
 	// full paths for tools
 	rpm        string
@@ -93,6 +102,7 @@ func newHandler(ctx context.Context) (*handler, error) {
 	downloader := manager.NewDownloader(s3svc)
 	uploader := manager.NewUploader(s3svc)
 	ssmsvc := ssm.NewFromConfig(cfg)
+	dynamodbsvc := dynamodb.NewFromConfig(cfg)
 
 	// lookup executables
 	rpm, err := exec.LookPath("rpm")
@@ -113,17 +123,20 @@ func newHandler(ctx context.Context) (*handler, error) {
 	}
 
 	return &handler{
-		s3svc:           s3svc,
-		downloader:      downloader,
-		uploader:        uploader,
-		ssmsvc:          ssmsvc,
 		outputBucket:    os.Getenv("OUTPUT_BUCKET"),
 		secretParamPath: os.Getenv("GPG_SECRET_KEY"),
 		depth:           3, // $distribution/$releasever/$basearch
-		rpm:             rpm,
-		gpg:             gpg,
-		createrepo:      createrepo,
-		mergerepo:       mergerepo,
+		lockTable:       os.Getenv("LOCKER_TABLE"),
+
+		s3svc:       s3svc,
+		downloader:  downloader,
+		uploader:    uploader,
+		ssmsvc:      ssmsvc,
+		dynamodbsvc: dynamodbsvc,
+		rpm:         rpm,
+		gpg:         gpg,
+		createrepo:  createrepo,
+		mergerepo:   mergerepo,
 	}, nil
 }
 
@@ -227,23 +240,35 @@ func (c *myContext) handle(ctx context.Context) error {
 	}
 
 	for _, repo := range repos {
-		if err := c.createrepo(ctx, repo); err != nil {
-			return err
-		}
-		if err := c.downloadMetadata(ctx, repo); err != nil {
-			return err
-		}
-		if err := c.mergerepo(ctx, repo); err != nil {
-			return err
-		}
-		if err := c.uploadRPM(ctx, repo); err != nil {
-			return err
-		}
-		if err := c.uploadMetadata(ctx, repo); err != nil {
+		if err := c.handleRepo(ctx, repo); err != nil {
 			return err
 		}
 	}
 
+	return nil
+}
+
+func (c *myContext) handleRepo(ctx context.Context, repo string) error {
+	if err := c.lockRepo(ctx, repo); err != nil {
+		return err
+	}
+	defer c.unlockRepo(ctx, repo)
+
+	if err := c.createrepo(ctx, repo); err != nil {
+		return err
+	}
+	if err := c.downloadMetadata(ctx, repo); err != nil {
+		return err
+	}
+	if err := c.mergerepo(ctx, repo); err != nil {
+		return err
+	}
+	if err := c.uploadRPM(ctx, repo); err != nil {
+		return err
+	}
+	if err := c.uploadMetadata(ctx, repo); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -368,6 +393,42 @@ func (c myContext) listRepos(ctx context.Context) ([]string, error) {
 	return repos, nil
 }
 
+var policy = retry.Policy{
+	MinDelay: 100 * time.Millisecond,
+	MaxDelay: 30 * time.Second,
+	Jitter:   time.Second,
+}
+
+func (c *myContext) lockRepo(ctx context.Context, repo string) error {
+	lc, _ := lambdacontext.FromContext(ctx)
+	reqID := lc.AwsRequestID
+	retrier := policy.Start(ctx)
+	for retrier.Continue() {
+		_, err := c.handler.dynamodbsvc.PutItem(ctx, &dynamodb.PutItemInput{
+			TableName: aws.String(c.handler.lockTable),
+			Item: map[string]dbtypes.AttributeValue{
+				"id":         &dbtypes.AttributeValueMemberS{Value: repo},
+				"request_id": &dbtypes.AttributeValueMemberS{Value: reqID},
+			},
+			ConditionExpression: aws.String("attribute_not_exists(id)"),
+		})
+		if err == nil {
+			return nil
+		}
+	}
+	return errors.New("failed to lock")
+}
+
+func (c *myContext) unlockRepo(ctx context.Context, repo string) error {
+	_, err := c.handler.dynamodbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+		TableName: aws.String(c.handler.lockTable),
+		Key: map[string]dbtypes.AttributeValue{
+			"id": &dbtypes.AttributeValueMemberS{Value: repo},
+		},
+	})
+	return err
+}
+
 type repomd struct {
 	Revision string `xml:"revision"`
 	Data     []data `xml:"data"`
@@ -385,7 +446,7 @@ type location struct {
 	Href string `xml:"href,attr"`
 }
 
-func (c myContext) downloadMetadata(ctx context.Context, repo string) error {
+func (c *myContext) downloadMetadata(ctx context.Context, repo string) error {
 	log.Printf("download metadata for %s", repo)
 
 	path := filepath.Join(c.base, repo, "repodata", "repomd.xml")

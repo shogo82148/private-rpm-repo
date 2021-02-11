@@ -11,6 +11,8 @@ github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.0.2 h1:EtEU7WRaWliitZh2nmuxEXrN
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.0.2/go.mod h1:3hGg3PpiEjHnrkrlasTfxFqUsZ2GCk/fMUn4CbKgSkM=
 github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.0.2 h1:xtx8Tq+mot1IV1bsft1IVArUV82/PWYf6wWywxxfoPI=
 github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.0.2/go.mod h1:u9Bc9sLtjKI7z4nhtMTCa1HF4T9FvpqoyGqq/hKhkt0=
+github.com/aws/aws-sdk-go-v2/service/dynamodb v1.1.1 h1:rs3qt8vsrOXgm3qfVdjVkwnPiBXI2M7qN1nExoZmJfI=
+github.com/aws/aws-sdk-go-v2/service/dynamodb v1.1.1/go.mod h1:0xGVqnX5hK8bd/Qnqklpdellx5/6KPSPV7vfno3i1Sk=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.0.1 h1:q+3dVb1s3piv/Q/Ft0+OjU5iKItBRfCvU5wNLQUyIbA=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.0.1/go.mod h1:zurGx7QI3Bk2OFwswSXl3PtJDdgD3QzjkfskiukJ2Mg=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.0.2 h1:4AH9fFjUlVktQMznF+YN33aWNXaR4VgDXyP28qokJC0=
@@ -42,11 +44,14 @@ github.com/jmespath/go-jmespath/internal/testify v1.5.1/go.mod h1:L3OGu8Wl2/fWfC
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
+github.com/shogo82148/go-retry v1.0.0 h1:c487Qe+QYUffpUpPxrUN5fGJq6WVHSzGS4N3MNuR2OU=
+github.com/shogo82148/go-retry v1.0.0/go.mod h1:5jiw5yPWW6K+pMyimtNoaQSDD08RMEsJbhDwFrui5rc=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd0=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/urfave/cli/v2 v2.2.0/go.mod h1:SE9GqnLQmjVa0iPEY0f1w3ygNIYcIJ0OKPMoW2caLfQ=
+golang.org/x/xerrors v0.0.0-20190513163551-3ee3066db522/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 h1:E7g+9GITq07hpfrRu66IVDexMakfv52eLZ2CXBWiKr4=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
