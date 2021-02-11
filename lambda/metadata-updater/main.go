@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/smithy-go"
 )
 
 // {
@@ -369,9 +370,36 @@ func (c myContext) listRepos(ctx context.Context) ([]string, error) {
 func (c myContext) downloadMetadata(ctx context.Context, repo string) error {
 	log.Printf("download metadata for %s", repo)
 
-	// TODO: download metadata
+	path := filepath.Join(c.base, repo, "repodata", "repomd.xml")
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		return err
+	}
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return err
+	}
+	key := filepath.ToSlash(filepath.Join(repo, "repodata", "repomd.xml"))
+	log.Printf("download %s from %s", key, c.handler.outputBucket)
+	_, err = c.handler.downloader.Download(ctx, f, &s3.GetObjectInput{
+		Bucket: aws.String(c.handler.outputBucket),
+		Key:    aws.String(key),
+	})
+	if err1 := f.Close(); err == nil {
+		err = err1
+	}
+	if err != nil {
+		var ae smithy.APIError
+		if errors.As(err, &ae) && ae.ErrorCode() == "NoSuchKey" {
+			// it might be first S3 event.
+			// initialize the repository.
+			return c.createEmptyRepo(ctx, repo)
+		}
+	}
 
-	// create a empty repository
+	return nil
+}
+
+func (c *myContext) createEmptyRepo(ctx context.Context, repo string) error {
 	path := filepath.Join(c.base, repo)
 	if err := os.MkdirAll(path, 0700); err != nil {
 		return err
