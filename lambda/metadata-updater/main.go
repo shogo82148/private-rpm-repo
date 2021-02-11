@@ -424,9 +424,23 @@ func (c myContext) downloadMetadata(ctx context.Context, repo string) error {
 	}
 
 	for _, data := range metadata.Data {
-		log.Println("location: ", data.Location.Href)
-		log.Println("size: ", data.Size)
-		log.Println("open-size: ", data.OpenSize)
+		path := filepath.Join(c.base, repo, filepath.FromSlash(data.Location.Href))
+		key := filepath.ToSlash(filepath.Join(repo, filepath.FromSlash(data.Location.Href)))
+		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		if err != nil {
+			return err
+		}
+		log.Printf("download %s from %s", key, c.handler.outputBucket)
+		_, err = c.handler.downloader.Download(ctx, f, &s3.GetObjectInput{
+			Bucket: aws.String(c.handler.outputBucket),
+			Key:    aws.String(key),
+		})
+		if err1 := f.Close(); err == nil {
+			err = err1
+		}
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
