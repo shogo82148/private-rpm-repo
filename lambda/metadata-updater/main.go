@@ -478,7 +478,7 @@ func (c *myContext) mergerepo(ctx context.Context, repo string) error {
 	repo2 := filepath.Join(c.input, repo)
 	out := filepath.Join(c.output, repo)
 	cmd := exec.CommandContext(
-		ctx, c.handler.mergerepo, "--repo", repo1, "--repo", repo2, "--database", "--outputdir", out,
+		ctx, c.handler.mergerepo, "--repo", repo1, "--repo", repo2, "--database", " --omit-baseurl", "--outputdir", out,
 	)
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
