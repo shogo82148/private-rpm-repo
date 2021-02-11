@@ -416,7 +416,7 @@ func (c *myContext) mergerepo(ctx context.Context, repo string) error {
 func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
 	log.Printf("upload metadata for %s", repo)
 	dir := c.output
-	root := filepath.Join(c.output, "repodata")
+	root := filepath.Join(c.output, repo, "repodata")
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
