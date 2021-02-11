@@ -28,6 +28,7 @@ Resources:
     Properties:
       PackageType: Image
       Timeout: 900
+      MemorySize: 3008
       Events:
         S3Event:
           Type: S3
