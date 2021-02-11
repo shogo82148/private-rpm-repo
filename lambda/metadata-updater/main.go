@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 )
 
@@ -356,6 +357,7 @@ func (c *myContext) uploadRPM(ctx context.Context) error {
 		_, err = c.handler.uploader.Upload(ctx, &s3.PutObjectInput{
 			Bucket: aws.String(c.handler.outputBucket),
 			Key:    aws.String(key),
+			ACL:    s3types.ObjectCannedACLPublicRead,
 			Body:   f,
 		})
 		if err != nil {
