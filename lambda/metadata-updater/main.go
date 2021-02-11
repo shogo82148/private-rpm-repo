@@ -417,12 +417,17 @@ func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
 	log.Printf("upload metadata for %s", repo)
 	dir := c.output
 	root := filepath.Join(c.output, repo, "repodata")
-	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		// skip directories
 		if info.IsDir() {
+			return nil
+		}
+
+		// we need to upload repomd.xml finally
+		if info.Name() == "repomd.xml" {
 			return nil
 		}
 
@@ -451,6 +456,32 @@ func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	// upload repomd.xml here
+	path := filepath.Join(c.output, repo, "repodata", "repomd.xml")
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	key := filepath.ToSlash(filepath.Join(repo, "repodata", "repomd.xml"))
+	ext := filepath.Ext(".xml")
+	log.Printf("uploading %s to %s", key, c.handler.outputBucket)
+	_, err = c.handler.uploader.Upload(ctx, &s3.PutObjectInput{
+		Bucket:      aws.String(c.handler.outputBucket),
+		Key:         aws.String(key),
+		ACL:         s3types.ObjectCannedACLPublicRead,
+		ContentType: aws.String(mime.TypeByExtension(ext)),
+		Body:        f,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *myContext) uploadRPM(ctx context.Context, repo string) error {
