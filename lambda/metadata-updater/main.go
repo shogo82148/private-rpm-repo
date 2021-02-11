@@ -77,6 +77,7 @@ type handler struct {
 	rpm        string
 	gpg        string
 	createrepo string
+	mergerepo  string
 }
 
 func newHandler(ctx context.Context) (*handler, error) {
@@ -103,6 +104,10 @@ func newHandler(ctx context.Context) (*handler, error) {
 	if err != nil {
 		return nil, err
 	}
+	mergerepo, err := exec.LookPath("mergerepo")
+	if err != nil {
+		return nil, err
+	}
 
 	return &handler{
 		s3svc:           s3svc,
@@ -114,6 +119,7 @@ func newHandler(ctx context.Context) (*handler, error) {
 		rpm:             rpm,
 		gpg:             gpg,
 		createrepo:      createrepo,
+		mergerepo:       mergerepo,
 	}, nil
 }
 
@@ -218,6 +224,9 @@ func (c *myContext) handle(ctx context.Context) error {
 
 	for _, repo := range repos {
 		if err := c.createrepo(ctx, repo); err != nil {
+			return err
+		}
+		if err := c.downloadMetadata(ctx, repo); err != nil {
 			return err
 		}
 	}
@@ -350,7 +359,22 @@ func (c myContext) listRepos(ctx context.Context) ([]string, error) {
 	return repos, nil
 }
 
-func (c myContext) downloadMetadata(ctx context.Context) error {
+func (c myContext) downloadMetadata(ctx context.Context, repo string) error {
+	log.Printf("download metadata for %s", repo)
+
+	// TODO: download metadata
+
+	// create a empty repository
+	path := filepath.Join(c.base, repo)
+	if err := os.MkdirAll(path, 0700); err != nil {
+		return err
+	}
+	cmd := exec.CommandContext(ctx, c.handler.createrepo, path)
+	cmd.Stdout = os.Stderr
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -358,6 +382,22 @@ func (c *myContext) createrepo(ctx context.Context, repo string) error {
 	log.Printf("create repository for %s", repo)
 	path := filepath.Join(c.input, repo)
 	cmd := exec.CommandContext(ctx, c.handler.createrepo, path)
+	cmd.Stdout = os.Stderr
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *myContext) mergerepo(ctx context.Context, repo string) error {
+	log.Printf("merge repository for %s", repo)
+	repo1 := filepath.Join(c.base, repo)
+	repo2 := filepath.Join(c.input, repo)
+	out := filepath.Join(c.output, repo)
+	cmd := exec.CommandContext(
+		ctx, c.handler.mergerepo, "--repo", repo1, "--repo", repo2, "--database", "--outputdir", out,
+	)
 	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
