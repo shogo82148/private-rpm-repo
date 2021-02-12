@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -277,15 +278,26 @@ func (c *myContext) Cleanup() {
 }
 
 func (c *myContext) configureGPG(ctx context.Context) error {
-	// TODO: make GPG name configureable
-	err := ioutil.WriteFile(filepath.Join(c.home, ".rpmmacros"), []byte(`%_signature gpg
-%_gpg_name Ichinose Shogo <shogo82148@gmail.com>
+	if err := c.importGPGSecret(ctx); err != nil {
+		return err
+	}
+
+	uid, err := c.getUserID(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(filepath.Join(c.home, ".rpmmacros"), []byte(`%_signature gpg
+%_gpg_name `+uid+`
 %_tmppath /tmp
 `), 0600)
 	if err != nil {
 		return err
 	}
+	return nil
+}
 
+func (c *myContext) importGPGSecret(ctx context.Context) error {
 	out, err := c.handler.ssmsvc.GetParameter(ctx, &ssm.GetParameterInput{
 		Name:           aws.String("/" + c.handler.secretParamPath),
 		WithDecryption: true,
@@ -310,6 +322,87 @@ func (c *myContext) configureGPG(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+func (c *myContext) getUserID(ctx context.Context) (string, error) {
+	cmd := exec.CommandContext(ctx, c.handler.gpg, "--with-colons", "--list-keys")
+	cmd.Env = []string{
+		"HOME=" + c.home,
+	}
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	lines := strings.Split(string(out), "\n")
+	for _, line := range lines {
+		col := strings.Split(line, ":")
+		// ref. https://github.com/gpg/gnupg/blob/master/doc/DETAILS
+		if len(col) < 10 {
+			continue
+		}
+		if col[0] == "uid" {
+			return unescape(col[9]), nil
+		}
+	}
+	return "", errors.New("updater: user id not found")
+}
+
+func unescape(str string) string {
+	var buf strings.Builder
+	buf.Grow(len(str))
+	for i := 0; i < len(str); i++ {
+		if str[i] == '\\' {
+			i++
+			switch str[i] {
+			case 'a':
+				buf.WriteRune('\a')
+			case 'b':
+				buf.WriteRune('\b')
+			case 'f':
+				buf.WriteRune('\f')
+			case 'n':
+				buf.WriteRune('\n')
+			case 'r':
+				buf.WriteRune('\r')
+			case 't':
+				buf.WriteRune('\t')
+			case 'v':
+				buf.WriteRune('\v')
+			case '\\':
+				buf.WriteRune('\\')
+			case '\'':
+				buf.WriteRune('\'')
+			case '"':
+				buf.WriteRune('"')
+			case '?':
+				buf.WriteRune('?')
+			case '0', '1', '2', '3':
+				if i+3 > len(str) {
+					break
+				}
+				ch, err := strconv.ParseInt(str[i:i+3], 8, 8)
+				if err != nil {
+					break
+				}
+				i += 2
+				buf.WriteByte(byte(ch))
+			case 'x', 'X':
+				if i+3 > len(str) {
+					break
+				}
+				ch, err := strconv.ParseInt(str[i+1:i+3], 16, 8)
+				if err != nil {
+					break
+				}
+				i += 2
+				buf.WriteByte(byte(ch))
+			}
+			continue
+		}
+		buf.WriteByte(str[i])
+	}
+	return buf.String()
 }
 
 func (c *myContext) signRPM(ctx context.Context, name string) error {
