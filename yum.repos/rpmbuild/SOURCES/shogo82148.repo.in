@@ -1,0 +1,7 @@
+# shogo82148-rpm - packages by shogo82148
+[shogo82148-rpm]
+name=shogo82148-rpm
+baseurl=https://shogo82148-rpm-repository.s3-ap-northeast-1.amazonaws.com/__REPONAME__/$releasever/$basearch/
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-shogo82148
