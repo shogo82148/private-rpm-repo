@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
-	"io/ioutil"
 	"log"
 	"mime"
 	"os"
@@ -156,7 +155,7 @@ func (h *handler) handleEvent(ctx context.Context, event events.S3Event) error {
 }
 
 func (h *handler) newContext(event events.S3Event) (*myContext, error) {
-	dir, err := ioutil.TempDir("/tmp/", "updater-")
+	dir, err := os.MkdirTemp("/tmp/", "updater-")
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +286,7 @@ func (c *myContext) configureGPG(ctx context.Context) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(c.home, ".rpmmacros"), []byte(`%_signature gpg
+	err = os.WriteFile(filepath.Join(c.home, ".rpmmacros"), []byte(`%_signature gpg
 %_gpg_name `+uid+`
 %_tmppath /tmp
 `), 0600)
@@ -307,7 +306,7 @@ func (c *myContext) importGPGSecret(ctx context.Context) error {
 	}
 
 	key := filepath.Join(c.home, "secret.asc")
-	err = ioutil.WriteFile(key, []byte(aws.ToString(out.Parameter.Value)), 0600)
+	err = os.WriteFile(key, []byte(aws.ToString(out.Parameter.Value)), 0600)
 	if err != nil {
 		return err
 	}
@@ -568,7 +567,7 @@ func (c *myContext) downloadMetadata(ctx context.Context, repo string) error {
 		}
 	}
 
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
