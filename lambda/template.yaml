@@ -2,13 +2,24 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: shogo private rpm repository
 Transform: AWS::Serverless-2016-10-31
 
+Parameters:
+  RPMBucketName:
+    Type: String
+    Description: S3 bucket name for RPM repository
+  RPMTemporaryBucketName:
+    Type: String
+    Description: S3 bucket name for uploading RPM temporary
+  GPGSecret:
+    Type: AWS::SSM::Parameter::Name
+    Description: SSM Parameter name for GPG Secret key
+
 Resources:
   RPMBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      BucketName: shogo82148-rpm-repository
+      BucketName: !Ref RPMBucketName
       AccessControl: PublicRead
 
   RPMTemporaryBucket:
@@ -16,7 +27,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      BucketName: shogo82148-rpm-temporary
+      BucketName: !Ref RPMTemporaryBucketName
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -45,17 +56,17 @@ Resources:
       Policies:
         - S3ReadPolicy:
             # we can't write "!Ref RPMTemporaryBucket" because of Circular dependency between resources
-            BucketName: shogo82148-rpm-temporary
+            BucketName: !Ref RPMTemporaryBucketName
         - S3CrudPolicy:
             BucketName: !Ref RPMBucket
         - SSMParameterReadPolicy:
-            ParameterName: "shogo82148/gpg/secret"
+            ParameterName: !Ref GPGSecret
         - DynamoDBCrudPolicy:
             TableName: !Ref Locker
       Environment:
         Variables:
           OUTPUT_BUCKET: !Ref RPMBucket
-          GPG_SECRET_KEY: "shogo82148/gpg/secret"
+          GPG_SECRET_KEY: !Ref GPGSecret
           LOCKER_TABLE: !Ref Locker
     Metadata:
       DockerTag: latest
