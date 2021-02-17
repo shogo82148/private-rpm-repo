@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: upload users for shogo private rpm repository
+
+Resources:
+  FluentBitUser:
+    Type: AWS::IAM::User
+    Properties:
+      Policies:
+        - PolicyName: upload
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: "s3:*"
+                Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
+  FluentBitUserAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      Status: Active
+      UserName: !Ref FluentBitUser
+
+Outputs:
+  FluentBitUserAccessKey:
+    Value: !Ref FluentBitUserAccessKey
+  FluentBitUserAccessSecretKey:
+    Value: !GetAtt FluentBitUserAccessKey.SecretAccessKey
