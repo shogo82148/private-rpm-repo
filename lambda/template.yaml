@@ -60,7 +60,8 @@ Resources:
         - S3CrudPolicy:
             BucketName: !Ref RPMBucket
         - SSMParameterReadPolicy:
-            ParameterName: !Ref GPGSecret
+            # HACK: trim "/" prefix
+            ParameterName: !Join ["", !Split ["^/", !Sub "^${GPGSecret}"]]
         - DynamoDBCrudPolicy:
             TableName: !Ref Locker
       Environment:
