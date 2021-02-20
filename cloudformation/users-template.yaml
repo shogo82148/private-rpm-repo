@@ -2,6 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: upload users for shogo private rpm repository
 
 Resources:
+  # https://github.com/shogo82148/fluent-bit-rpm
   FluentBitUser:
     Type: AWS::IAM::User
     Properties:
@@ -19,8 +20,30 @@ Resources:
       Status: Active
       UserName: !Ref FluentBitUser
 
+  # https://github.com/shogo82148/nginx-rpm
+  NginxUser:
+    Type: AWS::IAM::User
+    Properties:
+      Policies:
+        - PolicyName: upload
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: "s3:*"
+                Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
+  NginxUserAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      Status: Active
+      UserName: !Ref NginxUser
+
 Outputs:
   FluentBitUserAccessKey:
     Value: !Ref FluentBitUserAccessKey
   FluentBitUserAccessSecretKey:
     Value: !GetAtt FluentBitUserAccessKey.SecretAccessKey
+  NginxUserAccessKey:
+    Value: !Ref NginxUserAccessKey
+  NginxUserAccessSecretKey:
+    Value: !GetAtt NginxUserAccessKey.SecretAccessKey
