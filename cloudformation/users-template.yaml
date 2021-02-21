@@ -56,6 +56,24 @@ Resources:
       Status: Active
       UserName: !Ref H2OUser
 
+  # https://github.com/shogo82148/redis-rpm
+  RedisUser:
+    Type: AWS::IAM::User
+    Properties:
+      Policies:
+        - PolicyName: upload
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: "s3:*"
+                Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
+  RedisUserAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      Status: Active
+      UserName: !Ref RedisUser
+
 Outputs:
   FluentBitUserAccessKey:
     Value: !Ref FluentBitUserAccessKey
@@ -69,3 +87,7 @@ Outputs:
     Value: !Ref H2OUserAccessKey
   H2OUserAccessSecretKey:
     Value: !GetAtt H2OUserAccessKey.SecretAccessKey
+  RedisUserAccessKey:
+    Value: !Ref RedisUserAccessKey
+  RedisUserAccessSecretKey:
+    Value: !GetAtt RedisUserAccessKey.SecretAccessKey
