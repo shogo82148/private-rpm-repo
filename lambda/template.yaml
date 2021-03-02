@@ -21,6 +21,8 @@ Resources:
     Properties:
       BucketName: !Ref RPMBucketName
       AccessControl: PublicRead
+      VersioningConfiguration:
+        Status: Enabled
 
   RPMTemporaryBucket:
     Type: AWS::S3::Bucket
@@ -33,6 +35,8 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
 
   Locker:
     Type: AWS::Serverless::SimpleTable
