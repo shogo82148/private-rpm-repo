@@ -92,6 +92,24 @@ Resources:
       Status: Active
       UserName: !Ref ServerStarterUser
 
+  # https://github.com/shogo82148/cloudwatch-logs-agent-lite
+  CloudWatchLogsAgentLiteUser:
+    Type: AWS::IAM::User
+    Properties:
+      Policies:
+        - PolicyName: upload
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: "s3:*"
+                Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
+  CloudWatchLogsAgentLiteUserAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      Status: Active
+      UserName: !Ref ServerStarterUser
+
 Outputs:
   FluentBitUserAccessKey:
     Value: !Ref FluentBitUserAccessKey
@@ -113,3 +131,7 @@ Outputs:
     Value: !Ref ServerStarterUserAccessKey
   ServerStarterUserAccessSecretKey:
     Value: !GetAtt ServerStarterUserAccessKey.SecretAccessKey
+  CloudWatchLogsAgentLiteUserAccessKey:
+    Value: !Ref CloudWatchLogsAgentLiteUserAccessKey
+  CloudWatchLogsAgentLiteUserAccessSecretKey:
+    Value: !GetAtt CloudWatchLogsAgentLiteUserAccessKey.SecretAccessKey
