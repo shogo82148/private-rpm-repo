@@ -128,6 +128,24 @@ Resources:
       Status: Active
       UserName: !Ref MitamaeUser
 
+  # https://github.com/shogo82148/go-nginx-oauth2-adapter
+  OAuth2AdapterUser:
+    Type: AWS::IAM::User
+    Properties:
+      Policies:
+        - PolicyName: upload
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: "s3:*"
+                Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
+  OAuth2AdapterUserAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      Status: Active
+      UserName: !Ref OAuth2AdapterUser
+
 Outputs:
   FluentBitUserAccessKey:
     Value: !Ref FluentBitUserAccessKey
@@ -157,3 +175,7 @@ Outputs:
     Value: !Ref MitamaeUserAccessKey
   MitamaeUserAccessSecretKey:
     Value: !GetAtt MitamaeUserAccessKey.SecretAccessKey
+  OAuth2AdapterUserAccessKey:
+    Value: !Ref OAuth2AdapterUserAccessKey
+  OAuth2AdapterUserAccessSecretKey:
+    Value: !GetAtt OAuth2AdapterUserAccessKey.SecretAccessKey
