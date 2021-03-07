@@ -110,6 +110,24 @@ Resources:
       Status: Active
       UserName: !Ref ServerStarterUser
 
+  # https://github.com/shogo82148/mitamae-rpm
+  MitamaeUser:
+    Type: AWS::IAM::User
+    Properties:
+      Policies:
+        - PolicyName: upload
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: "s3:*"
+                Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
+  MitamaeUserAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      Status: Active
+      UserName: !Ref MitamaeUser
+
 Outputs:
   FluentBitUserAccessKey:
     Value: !Ref FluentBitUserAccessKey
@@ -135,3 +153,7 @@ Outputs:
     Value: !Ref CloudWatchLogsAgentLiteUserAccessKey
   CloudWatchLogsAgentLiteUserAccessSecretKey:
     Value: !GetAtt CloudWatchLogsAgentLiteUserAccessKey.SecretAccessKey
+  MitamaeUserAccessKey:
+    Value: !Ref MitamaeUserAccessKey
+  MitamaeUserAccessSecretKey:
+    Value: !GetAtt MitamaeUserAccessKey.SecretAccessKey
