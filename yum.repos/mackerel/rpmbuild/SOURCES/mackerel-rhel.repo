@@ -1,0 +1,7 @@
+# repository of mackerel.io
+[mackerel]
+name=mackerel-agent
+baseurl=http://yum.mackerel.io/v2/$basearch
+gpgcheck=1
+enabled=1
+gpgkey=https://mackerel.io/file/cert/GPG-KEY-mackerel-v2
