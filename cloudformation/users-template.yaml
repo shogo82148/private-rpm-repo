@@ -51,9 +51,26 @@ Resources:
                 Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
 
   # https://github.com/shogo82148/h2o-rpm
-  H2OUser:
-    Type: AWS::IAM::User
+  H2ORole:
+    Type: AWS::IAM::Role
     Properties:
+      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::053160724612:root
+            Action:
+              - 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                "sts:ExternalId": shogo82148/h2o-rpm
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::053160724612:root
+            Action:
+              - 'sts:TagSession'
       Policies:
         - PolicyName: upload
           PolicyDocument:
@@ -62,11 +79,6 @@ Resources:
               - Effect: Allow
                 Action: "s3:*"
                 Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
-  H2OUserAccessKey:
-    Type: AWS::IAM::AccessKey
-    Properties:
-      Status: Active
-      UserName: !Ref H2OUser
 
   # https://github.com/shogo82148/redis-rpm
   RedisRole:
@@ -189,10 +201,8 @@ Outputs:
     Value: !GetAtt FluentBitUserAccessKey.SecretAccessKey
   NginxRole:
     Value: !GetAtt NginxRole.Arn
-  H2OUserAccessKey:
-    Value: !Ref H2OUserAccessKey
-  H2OUserAccessSecretKey:
-    Value: !GetAtt H2OUserAccessKey.SecretAccessKey
+  H2ORoleRole:
+    Value: !GetAtt H2ORole.Arn
   RedisRole:
     Value: !GetAtt RedisRole.Arn
   ServerStarterRole:
