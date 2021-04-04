@@ -213,9 +213,26 @@ Resources:
                 Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
 
   # https://github.com/shogo82148/go-nginx-oauth2-adapter
-  OAuth2AdapterUser:
-    Type: AWS::IAM::User
+  OAuth2AdapterRole:
+    Type: AWS::IAM::Role
     Properties:
+      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::053160724612:root
+            Action:
+              - 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                "sts:ExternalId": shogo82148/go-nginx-oauth2-adapter
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::053160724612:root
+            Action:
+              - 'sts:TagSession'
       Policies:
         - PolicyName: upload
           PolicyDocument:
@@ -224,11 +241,6 @@ Resources:
               - Effect: Allow
                 Action: "s3:*"
                 Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
-  OAuth2AdapterUserAccessKey:
-    Type: AWS::IAM::AccessKey
-    Properties:
-      Status: Active
-      UserName: !Ref OAuth2AdapterUser
 
 Outputs:
   FluentBitRole:
@@ -245,7 +257,5 @@ Outputs:
     Value: !GetAtt CloudWatchLogsAgentRole.Arn
   MitamaeRole:
     Value: !GetAtt MitamaeRole.Arn
-  OAuth2AdapterUserAccessKey:
-    Value: !Ref OAuth2AdapterUserAccessKey
-  OAuth2AdapterUserAccessSecretKey:
-    Value: !GetAtt OAuth2AdapterUserAccessKey.SecretAccessKey
+  OAuth2AdapterRole:
+    Value: !GetAtt OAuth2AdapterRole.Arn
