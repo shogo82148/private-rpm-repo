@@ -7,6 +7,7 @@ all: amazonlinux2 centos7 centos8
 amazonlinux2: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2
 centos7: IMAGE_NAME := $(IMAGE_NAME)-centos7
 centos8: IMAGE_NAME := $(IMAGE_NAME)-centos8
+almalinux8: IMAGE_NAME := $(IMAGE_NAME)-almalinux8
 
 .PHONY: amazonlinux2
 amazonlinux2: amazonlinux2.build
@@ -17,10 +18,13 @@ centos7: centos7.build
 .PHONY: centos8
 centos8: centos8.build
 
+.PHONY: almalinux8
+almalinux8: almalinux8.build
+
 %.build: rpmbuild/SPECS/mackerel.spec rpmbuild/SOURCES/mackerel-rhel.repo rpmbuild/SOURCES/mackerel-amzn2.repo
 	[ -d $@.bak ] && rm -rf $@.bak || :
 	[ -d $@ ] && mv $@ $@.bak || :
-	tar -czf - Dockerfile.$* rpmbuild | docker build --file Dockerfile.$* -t $(IMAGE_NAME) -
+	docker build --file Dockerfile.$* -t $(IMAGE_NAME) .
 	docker run --name $(IMAGE_NAME)-tmp $(IMAGE_NAME)
 	mkdir -p tmp
 	docker wait $(IMAGE_NAME)-tmp
