@@ -69,9 +69,26 @@ Resources:
       UserName: !Ref H2OUser
 
   # https://github.com/shogo82148/redis-rpm
-  RedisUser:
-    Type: AWS::IAM::User
+  RedisRole:
+    Type: AWS::IAM::Role
     Properties:
+      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::053160724612:root
+            Action:
+              - 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                "sts:ExternalId": shogo82148/redis-rpm
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::053160724612:root
+            Action:
+              - 'sts:TagSession'
       Policies:
         - PolicyName: upload
           PolicyDocument:
@@ -80,11 +97,6 @@ Resources:
               - Effect: Allow
                 Action: "s3:*"
                 Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
-  RedisUserAccessKey:
-    Type: AWS::IAM::AccessKey
-    Properties:
-      Status: Active
-      UserName: !Ref RedisUser
 
   # https://github.com/shogo82148/server-starter
   ServerStarterUser:
@@ -169,10 +181,8 @@ Outputs:
     Value: !Ref H2OUserAccessKey
   H2OUserAccessSecretKey:
     Value: !GetAtt H2OUserAccessKey.SecretAccessKey
-  RedisUserAccessKey:
-    Value: !Ref RedisUserAccessKey
-  RedisUserAccessSecretKey:
-    Value: !GetAtt RedisUserAccessKey.SecretAccessKey
+  RedisRole:
+    Value: !GetAtt RedisRole.Arn
   ServerStarterUserAccessKey:
     Value: !Ref ServerStarterUserAccessKey
   ServerStarterUserAccessSecretKey:
