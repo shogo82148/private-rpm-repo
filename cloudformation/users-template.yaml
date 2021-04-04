@@ -176,7 +176,7 @@ Outputs:
   FluentBitUserAccessSecretKey:
     Value: !GetAtt FluentBitUserAccessKey.SecretAccessKey
   NginxRole:
-    Value: !Ref NginxRole
+    Value: !GetAtt NginxRole.Arn
   H2OUserAccessKey:
     Value: !Ref H2OUserAccessKey
   H2OUserAccessSecretKey:
