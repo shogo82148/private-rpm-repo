@@ -153,9 +153,26 @@ Resources:
                 Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
 
   # https://github.com/shogo82148/cloudwatch-logs-agent-lite
-  CloudWatchLogsAgentLiteUser:
-    Type: AWS::IAM::User
+  CloudWatchLogsAgentRole:
+    Type: AWS::IAM::Role
     Properties:
+      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::053160724612:root
+            Action:
+              - 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                "sts:ExternalId": shogo82148/cloudwatch-logs-agent-lite
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::053160724612:root
+            Action:
+              - 'sts:TagSession'
       Policies:
         - PolicyName: upload
           PolicyDocument:
@@ -164,11 +181,6 @@ Resources:
               - Effect: Allow
                 Action: "s3:*"
                 Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
-  CloudWatchLogsAgentLiteUserAccessKey:
-    Type: AWS::IAM::AccessKey
-    Properties:
-      Status: Active
-      UserName: !Ref CloudWatchLogsAgentLiteUser
 
   # https://github.com/shogo82148/mitamae-rpm
   MitamaeRole:
@@ -229,10 +241,8 @@ Outputs:
     Value: !GetAtt RedisRole.Arn
   ServerStarterRole:
     Value: !GetAtt ServerStarterRole.Arn
-  CloudWatchLogsAgentLiteUserAccessKey:
-    Value: !Ref CloudWatchLogsAgentLiteUserAccessKey
-  CloudWatchLogsAgentLiteUserAccessSecretKey:
-    Value: !GetAtt CloudWatchLogsAgentLiteUserAccessKey.SecretAccessKey
+  CloudWatchLogsAgentRole:
+    Value: !GetAtt CloudWatchLogsAgentRole.Arn
   MitamaeRole:
     Value: !GetAtt MitamaeRole.Arn
   OAuth2AdapterUserAccessKey:
