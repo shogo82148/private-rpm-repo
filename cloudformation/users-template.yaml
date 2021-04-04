@@ -99,9 +99,26 @@ Resources:
                 Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
 
   # https://github.com/shogo82148/server-starter
-  ServerStarterUser:
-    Type: AWS::IAM::User
+  ServerStarterRole:
+    Type: AWS::IAM::Role
     Properties:
+      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::053160724612:root
+            Action:
+              - 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                "sts:ExternalId": shogo82148/server-starter
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::053160724612:root
+            Action:
+              - 'sts:TagSession'
       Policies:
         - PolicyName: upload
           PolicyDocument:
@@ -110,11 +127,6 @@ Resources:
               - Effect: Allow
                 Action: "s3:*"
                 Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
-  ServerStarterUserAccessKey:
-    Type: AWS::IAM::AccessKey
-    Properties:
-      Status: Active
-      UserName: !Ref ServerStarterUser
 
   # https://github.com/shogo82148/cloudwatch-logs-agent-lite
   CloudWatchLogsAgentLiteUser:
@@ -132,7 +144,7 @@ Resources:
     Type: AWS::IAM::AccessKey
     Properties:
       Status: Active
-      UserName: !Ref ServerStarterUser
+      UserName: !Ref CloudWatchLogsAgentLiteUser
 
   # https://github.com/shogo82148/mitamae-rpm
   MitamaeUser:
@@ -183,10 +195,8 @@ Outputs:
     Value: !GetAtt H2OUserAccessKey.SecretAccessKey
   RedisRole:
     Value: !GetAtt RedisRole.Arn
-  ServerStarterUserAccessKey:
-    Value: !Ref ServerStarterUserAccessKey
-  ServerStarterUserAccessSecretKey:
-    Value: !GetAtt ServerStarterUserAccessKey.SecretAccessKey
+  ServerStarterRole:
+    Value: !GetAtt ServerStarterRole.Arn
   CloudWatchLogsAgentLiteUserAccessKey:
     Value: !Ref CloudWatchLogsAgentLiteUserAccessKey
   CloudWatchLogsAgentLiteUserAccessSecretKey:
