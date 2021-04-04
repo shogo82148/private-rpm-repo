@@ -8,17 +8,21 @@
 %define repo_name fedora
 %endif
 
+%if 0%{?almalinux}
+%define repo_name almalinux
+%endif
+
 %if 0%{?amzn}
 %define repo_name amazonlinux
 %endif
 
 Name:           shogo82148
-Version:        1.0.0
+Version:        1.0.1
 Release:        1%{?dist}
 Summary:        shogo82148's Original Packages
 
 Group:          System Environment/Base
-License:        GPLv2
+License:        MIT
 
 URL:            https://github.com/shogo82148
 Source0:        RPM-GPG-KEY-shogo82148
@@ -58,5 +62,8 @@ rm -rf $RPM_BUILD_ROOT
 /etc/pki/rpm-gpg/*
 
 %changelog
+* Sun Apr 04 2021 Ichinose Shogo <shogo82148@gmail.com> - 1.0.1-1
+- Support AlmaLinux
+
 * Sun Feb 14 2021 Ichinose Shogo <shogo82148@gmail.com> - 1.0.0-1
 - Create Package
