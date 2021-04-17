@@ -21,7 +21,7 @@ Resources:
     Properties:
       BucketName: !Ref RPMBucketName
       PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
+        BlockPublicAcls: false # objects in the bucket might be public
         BlockPublicPolicy: true
         IgnorePublicAcls: false # objects in the bucket might be public
         RestrictPublicBuckets: false # objects in the bucket might be public
