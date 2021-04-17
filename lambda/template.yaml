@@ -20,7 +20,11 @@ Resources:
     UpdateReplacePolicy: Retain
     Properties:
       BucketName: !Ref RPMBucketName
-      AccessControl: PublicRead
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: false # objects in the bucket might be public
+        RestrictPublicBuckets: false # objects in the bucket might be public
       VersioningConfiguration:
         Status: Enabled
 
