@@ -12,6 +12,10 @@
 %define repo_name almalinux
 %endif
 
+%if 0%{?rocky}
+%define repo_name rockylinux
+%endif
+
 %if 0%{?amzn}
 %define repo_name amazonlinux
 %endif

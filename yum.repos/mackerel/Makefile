@@ -21,6 +21,9 @@ centos8: centos8.build
 .PHONY: almalinux8
 almalinux8: almalinux8.build
 
+.PHONY: rockylinux8
+rockylinux8: rockylinux8.build
+
 %.build: rpmbuild/SPECS/mackerel.spec rpmbuild/SOURCES/mackerel-rhel.repo rpmbuild/SOURCES/mackerel-amzn2.repo
 	[ -d $@.bak ] && rm -rf $@.bak || :
 	[ -d $@ ] && mv $@ $@.bak || :
