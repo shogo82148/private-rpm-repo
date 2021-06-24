@@ -20,6 +20,9 @@ centos8: centos8.build
 .PHONY: almalinux8
 almalinux8: almalinux8.build
 
+.PHONY: rockylinux8
+rockylinux8: rockylinux8.build
+
 %.build: rpmbuild/SPECS/shogo82148.spec rpmbuild/SOURCES/RPM-GPG-KEY-shogo82148
 	[ -d $@.bak ] && rm -rf $@.bak || :
 	[ -d $@ ] && mv $@ $@.bak || :
