@@ -12,7 +12,7 @@
 %define repo_name almalinux
 %endif
 
-%if 0%{?rockylinux}
+%if 0%{?rocky}
 %define repo_name rockylinux
 %endif
 
