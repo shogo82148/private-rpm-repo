@@ -6,7 +6,7 @@ Resources:
   FluentBitRole:
     Type: AWS::IAM::Role
     Properties:
-      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -36,7 +36,7 @@ Resources:
   NginxRole:
     Type: AWS::IAM::Role
     Properties:
-      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -66,7 +66,7 @@ Resources:
   H2ORole:
     Type: AWS::IAM::Role
     Properties:
-      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -96,7 +96,7 @@ Resources:
   RedisRole:
     Type: AWS::IAM::Role
     Properties:
-      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -126,7 +126,7 @@ Resources:
   ServerStarterRole:
     Type: AWS::IAM::Role
     Properties:
-      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -156,7 +156,7 @@ Resources:
   CloudWatchLogsAgentRole:
     Type: AWS::IAM::Role
     Properties:
-      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -186,7 +186,7 @@ Resources:
   MitamaeRole:
     Type: AWS::IAM::Role
     Properties:
-      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -216,7 +216,7 @@ Resources:
   OAuth2AdapterRole:
     Type: AWS::IAM::Role
     Properties:
-      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -246,7 +246,7 @@ Resources:
   SqldefRole:
     Type: AWS::IAM::Role
     Properties:
-      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -276,7 +276,7 @@ Resources:
   SchemalexDeployRole:
     Type: AWS::IAM::Role
     Properties:
-      # trust policy for using https://github.com/shogo82148/actions-aws-assume-role
+      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -288,6 +288,36 @@ Resources:
             Condition:
               StringEquals:
                 "sts:ExternalId": shogo82148/schemalex-deploy
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::053160724612:root
+            Action:
+              - 'sts:TagSession'
+      Policies:
+        - PolicyName: upload
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: "s3:*"
+                Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
+
+  # https://github.com/shogo82148/s3cli-mini
+  S3cliMiniDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::053160724612:root
+            Action:
+              - 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                "sts:ExternalId": shogo82148/s3cli-mini
           - Effect: Allow
             Principal:
               AWS: arn:aws:iam::053160724612:root
@@ -323,3 +353,5 @@ Outputs:
     Value: !GetAtt SqldefRole.Arn
   SchemalexDeployRole:
     Value: !GetAtt SchemalexDeployRole.Arn
+  S3cliMiniDeployRole:
+    Value: !GetAtt S3cliMiniDeployRole.Arn
