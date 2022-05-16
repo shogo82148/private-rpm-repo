@@ -3,19 +3,16 @@ IMAGE_NAME := shogo82148-package
 
 amazonlinux2: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2
 centos7: IMAGE_NAME := $(IMAGE_NAME)-centos7
-centos8: IMAGE_NAME := $(IMAGE_NAME)-centos8
 almalinux8: IMAGE_NAME := $(IMAGE_NAME)-almalinux8
+rockylinux8: IMAGE_NAME := $(IMAGE_NAME)-rockylinux8
 
-all: amazonlinux2 centos7 centos8 almalinux8
+all: amazonlinux2 centos7 almalinux8 rockylinux8
 
 .PHONY: amazonlinux2
 amazonlinux2: amazonlinux2.build
 
 .PHONY: centos7
 centos7: centos7.build
-
-.PHONY: centos8
-centos8: centos8.build
 
 .PHONY: almalinux8
 almalinux8: almalinux8.build
