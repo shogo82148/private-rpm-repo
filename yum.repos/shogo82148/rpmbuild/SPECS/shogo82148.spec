@@ -21,7 +21,7 @@
 %endif
 
 Name:           shogo82148
-Version:        1.0.1
+Version:        1.0.2
 Release:        1%{?dist}
 Summary:        shogo82148's Original Packages
 
@@ -66,6 +66,10 @@ rm -rf $RPM_BUILD_ROOT
 /etc/pki/rpm-gpg/*
 
 %changelog
+* Mon May 16 2022 Ichinose Shogo <shogo82148@gmail.com> - 1.0.2-1
+- Add AlmaLinux9
+- Add Amazon Linux 2022
+
 * Sun Apr 04 2021 Ichinose Shogo <shogo82148@gmail.com> - 1.0.1-1
 - Support AlmaLinux
 
