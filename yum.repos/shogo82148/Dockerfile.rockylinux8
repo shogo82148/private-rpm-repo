@@ -1,4 +1,4 @@
-FROM rockylinux/rockylinux:8
+FROM rockylinux:8
 ENV HOME /
 RUN dnf update -y
 RUN dnf install -y rpm-build redhat-rpm-config rpmdevtools make
