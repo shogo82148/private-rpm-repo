@@ -3,7 +3,7 @@ ENV HOME /
 RUN dnf update -y
 RUN dnf install -y rpm-build redhat-rpm-config rpmdevtools make
 RUN rpmdev-setuptree
-RUN echo '%dist   .el8' >> /.rpmmacros
+RUN echo '%dist   .el9' >> /.rpmmacros
 ADD ./rpmbuild/ /rpmbuild/
 RUN chown -R root:root /rpmbuild
 RUN rpmbuild -ba /rpmbuild/SPECS/shogo82148.spec
