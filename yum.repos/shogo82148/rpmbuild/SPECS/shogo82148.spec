@@ -62,10 +62,10 @@ rm -rf $RPM_BUILD_ROOT
     # ref. https://access.redhat.com/documentation/en_us/red_hat_enterprise_linux/9/html/security_hardening/using-the-system-wide-cryptographic-policies_security-hardening
     # So, the public key must not have SHA1 digest.
     %{__install} -dm 755 $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg
-    %{__install} -pm 644 %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg
+    %{__install} -pm 644 %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg/RPM-GPG-KEY-shogo82148
 %else
     %{__install} -dm 755 $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg
-    %{__install} -pm 644 %{SOURCE0} $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg
+    %{__install} -pm 644 %{SOURCE0} $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg/RPM-GPG-KEY-shogo82148
 %endif
 
 # yum
