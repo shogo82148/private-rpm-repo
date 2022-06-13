@@ -56,9 +56,17 @@ sed -e 's|__REPONAME__|'%{repo_name}'|g' < %{SOURCE1} > shogo82148.repo
 %install
 rm -rf $RPM_BUILD_ROOT
 
-#GPG Key
-install -dm 755 $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg
-install -pm 644 %{SOURCE0} $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg
+# GPG Key
+%if 0%{?rhel} >= 9
+    # From RHEL9, SHA1 is disabled by its crypto policies.
+    # ref. https://access.redhat.com/documentation/en_us/red_hat_enterprise_linux/9/html/security_hardening/using-the-system-wide-cryptographic-policies_security-hardening
+    # So, the public key must not have SHA1 digest.
+    %{__install} -dm 755 $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg
+    %{__install} -pm 644 %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg
+%else
+    %{__install} -dm 755 $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg
+    %{__install} -pm 644 %{SOURCE0} $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg
+%endif
 
 # yum
 install -dm 755 $RPM_BUILD_ROOT%{_sysconfdir}/yum.repos.d
