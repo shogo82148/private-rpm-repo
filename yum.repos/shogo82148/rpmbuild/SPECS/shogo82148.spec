@@ -32,6 +32,13 @@ URL:            https://github.com/shogo82148
 Source0:        RPM-GPG-KEY-shogo82148
 Source1:        shogo82148.repo.in
 
+# it is same as RPM-GPG-KEY-shogo82148, but it doesn't have SHA1 digest.
+# ref. https://unix.stackexchange.com/questions/423109/how-do-i-prevent-gpg-from-including-sha1
+# > To answer how do you prevent gpg from includng SHA1,
+# > you can use the weak digest parameter by setting --weak-digest SHA1,
+# > or alternatively in your gpg.conf have a line that is weak-digest SHA1.
+Source2:        RPM-GPG-KEY-shogo82148-2022
+
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:     noarch
