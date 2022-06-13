@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"log"
 	"mime"
 	"os"
@@ -277,8 +278,12 @@ func (c *myContext) Cleanup() {
 }
 
 func (c *myContext) configureGPG(ctx context.Context) error {
-	if err := c.importGPGSecret(ctx); err != nil {
+	if err := c.createGPGConfig(ctx); err != nil {
 		return err
+	}
+
+	if err := c.importGPGSecret(ctx); err != nil {
+		return fmt.Errorf("failed to import GPG secret: %w", err)
 	}
 
 	uid, err := c.getUserID(ctx)
@@ -292,6 +297,42 @@ func (c *myContext) configureGPG(ctx context.Context) error {
 `), 0600)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (c *myContext) createGPGConfig(ctx context.Context) error {
+	dir := filepath.Join(c.home, ".gnupg")
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return fmt.Errorf("failed to create ~/.gnupg: %w", err)
+	}
+
+	conf := filepath.Join(dir, "gpg.conf")
+	err := os.WriteFile(conf, []byte(`
+# ref. https://ngkz.github.io/2020/01/gpg-hardening/
+# use SHA-512 when signing a key
+cert-digest-algo SHA512
+# override recipient key cipher preferences
+# remove 3DES and prefer AES256
+personal-cipher-preferences AES256 AES192 AES CAST5
+# override recipient key digest preferences
+# remove SHA-1 and prefer SHA-512
+personal-digest-preferences SHA512 SHA384 SHA256 SHA224
+# remove SHA-1 and 3DES from cipher preferences of newly created key
+default-preference-list SHA512 SHA384 SHA256 SHA224 AES256 AES192 AES CAST5 ZLIB BZIP2 ZIP Uncompressed
+# reject SHA-1 signature
+weak-digest SHA1
+# never allow use 3DES
+disable-cipher-algo 3DES
+# use AES256 when symmetric encryption
+s2k-cipher-algo AES256
+# use SHA-512 when symmetric encryption
+s2k-digest-algo SHA-512
+# mangle password many times as possible when symmetric encryption
+s2k-count 65011712
+`), 0600)
+	if err != nil {
+		return fmt.Errorf("failed to create ~/.gnupg/gpg.conf: %w", err)
 	}
 	return nil
 }
