@@ -21,7 +21,7 @@
 %endif
 
 Name:           shogo82148
-Version:        1.0.3
+Version:        1.0.4
 Release:        1%{?dist}
 Summary:        shogo82148's Original Packages
 
@@ -81,6 +81,9 @@ rm -rf $RPM_BUILD_ROOT
 /etc/pki/rpm-gpg/*
 
 %changelog
+* Mon Jun 13 2022 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.4-1
+- Do not use SHA1 digests in AlmaLinux9
+
 * Wed Jun 01 2022 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.3-1
 - Fix AlmaLinux9 RPM
 
