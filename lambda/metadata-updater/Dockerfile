@@ -8,9 +8,9 @@ RUN go mod download
 COPY main.go .
 RUN go build -tags lambda.norpc -o bootstrap main.go
 
-FROM amazon/aws-lambda-provided:al2
+FROM almalinux:9
 
-RUN yum update -y && yum install -y createrepo_c rpm-sign && rm -rf /var/cache/yum/* && yum clean all
+RUN dnf update -y && dnf install -y createrepo_c rpm-sign && rm -rf /var/cache/dnf/* && dnf clean all
 
 COPY --from=0 /go/metadata-updater/bootstrap /var/runtime/bootstrap
-CMD [ "metadata-updater" ]
+ENTRYPOINT [ "/var/runtime/bootstrap" ]
