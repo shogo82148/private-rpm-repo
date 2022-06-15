@@ -1,0 +1,34 @@
+name: test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lambda:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: |
+          make build
+        working-directory: "lambda"
+
+  mackerel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: |
+          make all
+        working-directory: "yum.repos/mackerel"
+
+  shogo82148:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: |
+          make all
+        working-directory: "yum.repos/shogo82148"
