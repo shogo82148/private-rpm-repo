@@ -289,6 +289,9 @@ func (c *myContext) configureGPG(ctx context.Context) error {
 	err = os.WriteFile(filepath.Join(c.home, ".rpmmacros"), []byte(`%_signature gpg
 %_gpg_name `+uid+`
 %_tmppath /tmp
+
+# from https://access.redhat.com/articles/3359321
+%__gpg_sign_cmd %{__gpg} gpg --force-v3-sigs --batch --verbose --no-armor --no-secmem-warning -u "%{_gpg_name}" -sbo %{__signature_filename} --digest-algo sha256 %{__plaintext_filename}'
 `), 0600)
 	if err != nil {
 		return err
