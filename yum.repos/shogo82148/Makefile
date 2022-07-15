@@ -7,8 +7,9 @@ centos7: IMAGE_NAME := $(IMAGE_NAME)-centos7
 almalinux8: IMAGE_NAME := $(IMAGE_NAME)-almalinux8
 almalinux9: IMAGE_NAME := $(IMAGE_NAME)-almalinux9
 rockylinux8: IMAGE_NAME := $(IMAGE_NAME)-rockylinux8
+rockylinux9: IMAGE_NAME := $(IMAGE_NAME)-rockylinux9
 
-all: amazonlinux2 amazonlinux2022 centos7 almalinux8 almalinux9 rockylinux8
+all: amazonlinux2 amazonlinux2022 centos7 almalinux8 almalinux9 rockylinux8 rockylinux9
 
 .PHONY: amazonlinux2
 amazonlinux2: amazonlinux2.build
@@ -27,6 +28,9 @@ almalinux9: almalinux9.build
 
 .PHONY: rockylinux8
 rockylinux8: rockylinux8.build
+
+.PHONY: rockylinux9
+rockylinux9: rockylinux9.build
 
 %.build: rpmbuild/SPECS/shogo82148.spec rpmbuild/SOURCES/RPM-GPG-KEY-shogo82148
 	[ -d $@.bak ] && rm -rf $@.bak || :
