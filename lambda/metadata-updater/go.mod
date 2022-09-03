@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.16.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.27.8
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.27.12
-	github.com/aws/smithy-go v1.13.1
+	github.com/aws/smithy-go v1.13.2
 	github.com/shogo82148/go-retry v1.1.1
 )
 
