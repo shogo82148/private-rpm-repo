@@ -302,7 +302,7 @@ func (c *myContext) configureGPG(ctx context.Context) error {
 func (c *myContext) importGPGSecret(ctx context.Context) error {
 	out, err := c.handler.ssmsvc.GetParameter(ctx, &ssm.GetParameterInput{
 		Name:           aws.String(c.handler.secretParamPath),
-		WithDecryption: true,
+		WithDecryption: aws.Bool(true),
 	})
 	if err != nil {
 		return err
