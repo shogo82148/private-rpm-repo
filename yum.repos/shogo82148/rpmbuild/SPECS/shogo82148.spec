@@ -66,6 +66,9 @@ rm -rf $RPM_BUILD_ROOT
 /etc/pki/rpm-gpg/*
 
 %changelog
+* Wed Dec 28 2022 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.4-1
+- Fix minor version problem of Amazon Linux 2022
+
 * Wed Jun 01 2022 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.3-1
 - Fix AlmaLinux9 RPM
 
