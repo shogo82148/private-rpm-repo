@@ -1,4 +1,4 @@
-FROM golang:1.18
+FROM golang:1.19.4
 
 RUN mkdir -p /go/metadata-updater
 WORKDIR /go/metadata-updater
@@ -8,7 +8,7 @@ RUN go mod download
 COPY main.go .
 RUN go build -tags lambda.norpc -o bootstrap main.go
 
-FROM amazon/aws-lambda-provided:al2
+FROM amazon/aws-lambda-provided:al2.2022.11.24.16
 
 RUN yum update -y && yum install -y createrepo_c rpm-sign && rm -rf /var/cache/yum/* && yum clean all
 
