@@ -43,7 +43,7 @@ This package contains shogo82148 (ICHINOSE Shogo) repository GPG key and configu
 
 sed -e 's|__REPONAME__|'%{repo_name}'|g' < %{SOURCE1} > shogo82148.repo
 
-if 0%{?amzn} >= 2022
+%if 0%{?amzn} >= 2022
 sed -e 's|$releasever|'%{?amzn}'|g' < shogo82148.repo > shogo82148.repo.tmp
 mv shogo82148.repo.tmp shogo82148.repo
 %endif
