@@ -21,7 +21,7 @@
 %endif
 
 Name:           shogo82148
-Version:        1.0.4
+Version:        1.0.6
 Release:        1%{?dist}
 Summary:        shogo82148's Original Packages
 
@@ -37,12 +37,16 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:     noarch
 
 %description
-This package contains shogo82148 (Ichinose Shogo) repository GPG key and configuration files.
+This package contains shogo82148 (ICHINOSE Shogo) repository GPG key and configuration files.
 
 %prep
 
-cp %{SOURCE1} .
 sed -e 's|__REPONAME__|'%{repo_name}'|g' < %{SOURCE1} > shogo82148.repo
+
+%if 0%{?amzn} >= 2022
+sed -e 's|$releasever|'%{?amzn}'|g' < shogo82148.repo > shogo82148.repo.tmp
+mv shogo82148.repo.tmp shogo82148.repo
+%endif
 
 %build
 
@@ -66,6 +70,12 @@ rm -rf $RPM_BUILD_ROOT
 /etc/pki/rpm-gpg/*
 
 %changelog
+* Wed Dec 28 2022 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.6-1
+- do not lock the repository version on Amazon Linux 2022
+
+* Wed Dec 28 2022 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.5-1
+- Fix minor version problem of Amazon Linux 2022
+
 * Fri Jul 15 2022 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.4-1
 - Add AlmaLinux9
 - Add Amazon Linux 2022
