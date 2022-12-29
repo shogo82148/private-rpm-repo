@@ -1,4 +1,4 @@
-FROM amazonlinux:2022.0.20221207.4
+FROM amazonlinux:2022
 ENV HOME /
 RUN dnf update -y
 RUN dnf install -y rpm-build redhat-rpm-config rpmdevtools make
