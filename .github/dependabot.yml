@@ -8,10 +8,11 @@ updates:
     schedule:
       interval: "daily"
     groups:
-      # AWS SDK for Go v2 関連のバージョンアップをまとめる
+      # grouping updates of AWS SDK for Go v2
       aws-sdk:
         patterns:
           - github.com/aws/aws-sdk-go-v2
+          - github.com/aws/aws-sdk-go-v2/*
 
   - package-ecosystem: "docker"
     directory: "lambda/metadata-updater"
