@@ -6,6 +6,7 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY main.go .
+ENV CGO_ENABLED=0
 RUN go build -tags lambda.norpc -o bootstrap main.go
 
 FROM amazon/aws-lambda-provided:al2.2023.05.29.17
