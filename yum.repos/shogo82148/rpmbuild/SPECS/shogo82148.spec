@@ -21,7 +21,7 @@
 %endif
 
 Name:           shogo82148
-Version:        1.0.6
+Version:        1.0.7
 Release:        1%{?dist}
 Summary:        shogo82148's Original Packages
 
@@ -70,6 +70,9 @@ rm -rf $RPM_BUILD_ROOT
 /etc/pki/rpm-gpg/*
 
 %changelog
+* Wed Dec 28 2022 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.7-1
+- introduce Amazon Linux 2023
+
 * Wed Dec 28 2022 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.6-1
 - do not lock the repository version on Amazon Linux 2022
 
