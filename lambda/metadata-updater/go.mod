@@ -6,9 +6,9 @@ require (
 	github.com/aws/aws-lambda-go v1.42.0
 	github.com/aws/aws-sdk-go-v2 v1.24.0
 	github.com/aws/aws-sdk-go-v2/config v1.26.1
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.15.7
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.15.8
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.6
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.47.5
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.47.6
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.5
 	github.com/aws/smithy-go v1.19.0
 	github.com/shogo82148/go-retry v1.1.1
