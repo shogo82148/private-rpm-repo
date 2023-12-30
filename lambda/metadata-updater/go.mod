@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.47.7
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.6
 	github.com/aws/smithy-go v1.19.0
-	github.com/shogo82148/go-retry v1.1.1
+	github.com/shogo82148/go-retry v1.2.0
 )
 
 require (
