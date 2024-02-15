@@ -7,9 +7,9 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.25.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.0
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.0
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.28.0
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.49.0
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.46.0
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.46.1
 	github.com/aws/smithy-go v1.20.0
 	github.com/shogo82148/go-retry v1.2.0
 )
