@@ -4,13 +4,12 @@ IMAGE_NAME := shogo82148-package
 amazonlinux2: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2
 amazonlinux2022: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2022
 amazonlinux2023: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2023
-centos7: IMAGE_NAME := $(IMAGE_NAME)-centos7
 almalinux8: IMAGE_NAME := $(IMAGE_NAME)-almalinux8
 almalinux9: IMAGE_NAME := $(IMAGE_NAME)-almalinux9
 rockylinux8: IMAGE_NAME := $(IMAGE_NAME)-rockylinux8
 rockylinux9: IMAGE_NAME := $(IMAGE_NAME)-rockylinux9
 
-all: amazonlinux2 amazonlinux2022 centos7 almalinux8 almalinux9 rockylinux8 rockylinux9
+all: amazonlinux2 amazonlinux2022 almalinux8 almalinux9 rockylinux8 rockylinux9
 
 .PHONY: amazonlinux2
 amazonlinux2: amazonlinux2.build
@@ -20,9 +19,6 @@ amazonlinux2022: amazonlinux2022.build
 
 .PHONY: amazonlinux2023
 amazonlinux2023: amazonlinux2023.build
-
-.PHONY: centos7
-centos7: centos7.build
 
 .PHONY: almalinux8
 almalinux8: almalinux8.build
