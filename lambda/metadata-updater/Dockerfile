@@ -1,4 +1,4 @@
-FROM golang:1.25.4
+FROM golang:1.26rc2
 
 RUN mkdir -p /go/metadata-updater
 WORKDIR /go/metadata-updater
