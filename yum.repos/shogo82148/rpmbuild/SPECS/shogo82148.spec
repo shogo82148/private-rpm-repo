@@ -70,7 +70,7 @@ rm -rf $RPM_BUILD_ROOT
 /etc/pki/rpm-gpg/*
 
 %changelog
-* Wed Dec 28 2022 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.8-1
+* Sat Apr 04 2026 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.8-1
 - Add AlmaLinux 10
 - Add Rocky Linux 10
 
