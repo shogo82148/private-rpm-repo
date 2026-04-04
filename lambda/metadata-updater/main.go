@@ -336,8 +336,8 @@ func (c *myContext) getUserID(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	lines := strings.Split(string(out), "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(string(out), "\n")
+	for line := range lines {
 		col := strings.Split(line, ":")
 		// ref. https://github.com/gpg/gnupg/blob/master/doc/DETAILS
 		if len(col) < 10 {
