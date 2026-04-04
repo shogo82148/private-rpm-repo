@@ -1,9 +1,9 @@
-FROM amazonlinux:2
+FROM almalinux:10
 ENV HOME=/
-RUN yum update -y
-RUN yum install -y rpm-build redhat-rpm-config rpmdevtools make
+RUN dnf update -y
+RUN dnf install -y rpm-build redhat-rpm-config rpmdevtools make
 RUN rpmdev-setuptree
-RUN echo '%dist   .amzn2' >> /.rpmmacros
+RUN echo '%dist   .el10' >> /.rpmmacros
 ADD ./rpmbuild/ /rpmbuild/
 RUN chown -R root:root /rpmbuild
 RUN rpmbuild -ba /rpmbuild/SPECS/shogo82148.spec

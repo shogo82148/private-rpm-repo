@@ -1,5 +1,5 @@
 FROM rockylinux:8
-ENV HOME /
+ENV HOME=/
 RUN dnf update -y
 RUN dnf install -y rpm-build redhat-rpm-config rpmdevtools make
 RUN rpmdev-setuptree
