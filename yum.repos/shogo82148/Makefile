@@ -2,20 +2,18 @@ TARGZ_FILE := shogo82148.tar.gz
 IMAGE_NAME := shogo82148-package
 
 amazonlinux2: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2
-amazonlinux2022: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2022
 amazonlinux2023: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2023
 almalinux8: IMAGE_NAME := $(IMAGE_NAME)-almalinux8
 almalinux9: IMAGE_NAME := $(IMAGE_NAME)-almalinux9
+almalinux10: IMAGE_NAME := $(IMAGE_NAME)-almalinux10
 rockylinux8: IMAGE_NAME := $(IMAGE_NAME)-rockylinux8
 rockylinux9: IMAGE_NAME := $(IMAGE_NAME)-rockylinux9
+rockylinux10: IMAGE_NAME := $(IMAGE_NAME)-rockylinux10
 
-all: amazonlinux2 amazonlinux2022 almalinux8 almalinux9 rockylinux8 rockylinux9
+all: amazonlinux2 amazonlinux2023 almalinux8 almalinux9 almalinux10 rockylinux8 rockylinux9 rockylinux10
 
 .PHONY: amazonlinux2
 amazonlinux2: amazonlinux2.build
-
-.PHONY: amazonlinux2022
-amazonlinux2022: amazonlinux2022.build
 
 .PHONY: amazonlinux2023
 amazonlinux2023: amazonlinux2023.build
@@ -26,11 +24,17 @@ almalinux8: almalinux8.build
 .PHONY: almalinux9
 almalinux9: almalinux9.build
 
+.PHONY: almalinux10
+almalinux10: almalinux10.build
+
 .PHONY: rockylinux8
 rockylinux8: rockylinux8.build
 
 .PHONY: rockylinux9
 rockylinux9: rockylinux9.build
+
+.PHONY: rockylinux10
+rockylinux10: rockylinux10.build
 
 %.build: rpmbuild/SPECS/shogo82148.spec rpmbuild/SOURCES/RPM-GPG-KEY-shogo82148
 	[ -d $@.bak ] && rm -rf $@.bak || :
