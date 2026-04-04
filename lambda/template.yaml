@@ -53,6 +53,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
+      Architectures:
+        - arm64
       Timeout: 900
       MemorySize: 512
       Events:
