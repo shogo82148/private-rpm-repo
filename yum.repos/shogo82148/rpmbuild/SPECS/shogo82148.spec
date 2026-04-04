@@ -71,7 +71,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Wed Dec 28 2022 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.8-1
-- Add AlamaLinux 10
+- Add AlmaLinux 10
 - Add Rocky Linux 10
 
 * Wed Dec 28 2022 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.7-1
