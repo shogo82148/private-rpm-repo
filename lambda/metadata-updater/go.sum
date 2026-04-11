@@ -50,8 +50,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/shogo82148/go-retry/v2 v2.0.1 h1:GV20np5IPU+pjFuNzFwmkFK90Lw3g4HhKgMVHewclb8=
-github.com/shogo82148/go-retry/v2 v2.0.1/go.mod h1:Rv6PnVPeGd1695eqstyZ+VFOQN8vsh5t87/Ur+aa9JI=
+github.com/shogo82148/go-retry/v2 v2.0.2 h1:3dPwN8d8QjBNRocGlHvqSFkcmAG82X/hU7wAeZc0K84=
+github.com/shogo82148/go-retry/v2 v2.0.2/go.mod h1:Rv6PnVPeGd1695eqstyZ+VFOQN8vsh5t87/Ur+aa9JI=
 github.com/stretchr/testify v1.7.2 h1:4jaiDzPyXQvSd7D0EjG45355tLlV3VOECpq10pLC+8s=
 github.com/stretchr/testify v1.7.2/go.mod h1:R6va5+xMeoiuVRoj+gSkQ7d3FALtqAAGI1FQKckRals=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
