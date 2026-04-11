@@ -2,36 +2,6 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: upload users for shogo private rpm repository
 
 Resources:
-  # https://github.com/shogo82148/nginx-rpm
-  NginxRole:
-    Type: AWS::IAM::Role
-    Properties:
-      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: arn:aws:iam::053160724612:root
-            Action:
-              - "sts:AssumeRole"
-            Condition:
-              StringEquals:
-                "sts:ExternalId": shogo82148/nginx-rpm
-          - Effect: Allow
-            Principal:
-              AWS: arn:aws:iam::053160724612:root
-            Action:
-              - "sts:TagSession"
-      Policies:
-        - PolicyName: upload
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action: "s3:*"
-                Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
-
   # https://github.com/shogo82148/h2o-rpm
   H2ORole:
     Type: AWS::IAM::Role
