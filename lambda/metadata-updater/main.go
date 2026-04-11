@@ -17,9 +17,9 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
+	tmtypes "github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/smithy-go"
 	"github.com/shogo82148/sets3lock"
@@ -76,8 +76,7 @@ type handler struct {
 
 	// Clients for aws services
 	s3svc      *s3.Client
-	downloader *manager.Downloader
-	uploader   *manager.Uploader
+	s3transfer *transfermanager.Client
 	ssmsvc     *ssm.Client
 
 	// full paths for tools
@@ -94,8 +93,7 @@ func newHandler(ctx context.Context) (*handler, error) {
 		return nil, err
 	}
 	s3svc := s3.NewFromConfig(cfg)
-	downloader := manager.NewDownloader(s3svc)
-	uploader := manager.NewUploader(s3svc)
+	s3transfer := transfermanager.New(s3svc)
 	ssmsvc := ssm.NewFromConfig(cfg)
 
 	// lookup executables
@@ -122,8 +120,7 @@ func newHandler(ctx context.Context) (*handler, error) {
 		depth:           3, // $distribution/$releasever/$basearch
 
 		s3svc:      s3svc,
-		downloader: downloader,
-		uploader:   uploader,
+		s3transfer: s3transfer,
 		ssmsvc:     ssmsvc,
 		rpm:        rpm,
 		gpg:        gpg,
@@ -447,9 +444,10 @@ func (c *myContext) downloadRPM(ctx context.Context, record events.S3EventRecord
 	}
 
 	log.Printf("downloading %s from %s", record.S3.Object.Key, record.S3.Bucket.Name)
-	_, err = c.handler.downloader.Download(ctx, f, &s3.GetObjectInput{
-		Bucket: aws.String(record.S3.Bucket.Name),
-		Key:    aws.String(record.S3.Object.Key),
+	_, err = c.handler.s3transfer.DownloadObject(ctx, &transfermanager.DownloadObjectInput{
+		Bucket:   new(record.S3.Bucket.Name),
+		Key:      new(record.S3.Object.Key),
+		WriterAt: f,
 	})
 	if err1 := f.Close(); err == nil {
 		err = err1
@@ -519,9 +517,10 @@ func (c *myContext) downloadMetadata(ctx context.Context, repo string) error {
 	}
 	key := filepath.ToSlash(filepath.Join(repo, "repodata", "repomd.xml"))
 	log.Printf("download %s from %s", key, c.handler.outputBucket)
-	_, err = c.handler.downloader.Download(ctx, f, &s3.GetObjectInput{
-		Bucket: aws.String(c.handler.outputBucket),
-		Key:    aws.String(key),
+	_, err = c.handler.s3transfer.DownloadObject(ctx, &transfermanager.DownloadObjectInput{
+		Bucket:   new(c.handler.outputBucket),
+		Key:      new(key),
+		WriterAt: f,
 	})
 	if err1 := f.Close(); err == nil {
 		err = err1
@@ -552,9 +551,10 @@ func (c *myContext) downloadMetadata(ctx context.Context, repo string) error {
 			return err
 		}
 		log.Printf("download %s from %s", key, c.handler.outputBucket)
-		_, err = c.handler.downloader.Download(ctx, f, &s3.GetObjectInput{
-			Bucket: aws.String(c.handler.outputBucket),
-			Key:    aws.String(key),
+		_, err = c.handler.s3transfer.DownloadObject(ctx, &transfermanager.DownloadObjectInput{
+			Bucket:   new(c.handler.outputBucket),
+			Key:      new(key),
+			WriterAt: f,
 		})
 		if err1 := f.Close(); err == nil {
 			err = err1
@@ -640,11 +640,11 @@ func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
 		key := filepath.ToSlash(rel)
 		ext := filepath.Ext(path)
 		log.Printf("uploading %s to %s", key, c.handler.outputBucket)
-		_, err = c.handler.uploader.Upload(ctx, &s3.PutObjectInput{
-			Bucket:      aws.String(c.handler.outputBucket),
-			Key:         aws.String(key),
-			ACL:         s3types.ObjectCannedACLPublicRead,
-			ContentType: aws.String(mime.TypeByExtension(ext)),
+		_, err = c.handler.s3transfer.UploadObject(ctx, &transfermanager.UploadObjectInput{
+			Bucket:      new(c.handler.outputBucket),
+			Key:         new(key),
+			ACL:         tmtypes.ObjectCannedACLPublicRead,
+			ContentType: new(mime.TypeByExtension(ext)),
 			Body:        f,
 		})
 		if err != nil {
@@ -666,11 +666,11 @@ func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
 	key := filepath.ToSlash(filepath.Join(repo, "repodata", "repomd.xml"))
 	ext := filepath.Ext(".xml")
 	log.Printf("uploading %s to %s", key, c.handler.outputBucket)
-	_, err = c.handler.uploader.Upload(ctx, &s3.PutObjectInput{
-		Bucket:      aws.String(c.handler.outputBucket),
-		Key:         aws.String(key),
-		ACL:         s3types.ObjectCannedACLPublicRead,
-		ContentType: aws.String(mime.TypeByExtension(ext)),
+	_, err = c.handler.s3transfer.UploadObject(ctx, &transfermanager.UploadObjectInput{
+		Bucket:      new(c.handler.outputBucket),
+		Key:         new(key),
+		ACL:         tmtypes.ObjectCannedACLPublicRead,
+		ContentType: new(mime.TypeByExtension(ext)),
 		Body:        f,
 	})
 	if err != nil {
@@ -710,11 +710,11 @@ func (c *myContext) uploadRPM(ctx context.Context, repo string) error {
 
 		key := filepath.ToSlash(rel)
 		log.Printf("uploading %s to %s", key, c.handler.outputBucket)
-		_, err = c.handler.uploader.Upload(ctx, &s3.PutObjectInput{
-			Bucket:      aws.String(c.handler.outputBucket),
-			Key:         aws.String(key),
-			ACL:         s3types.ObjectCannedACLPublicRead,
-			ContentType: aws.String(mime.TypeByExtension(ext)),
+		_, err = c.handler.s3transfer.UploadObject(ctx, &transfermanager.UploadObjectInput{
+			Bucket:      new(c.handler.outputBucket),
+			Key:         new(key),
+			ACL:         tmtypes.ObjectCannedACLPublicRead,
+			ContentType: new(mime.TypeByExtension(ext)),
 			Body:        f,
 		})
 		if err != nil {
