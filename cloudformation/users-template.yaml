@@ -320,8 +320,6 @@ Resources:
                 Action: "s3:*"
                 Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
 Outputs:
-  FluentBitRole:
-    Value: !GetAtt FluentBitRole.Arn
   NginxRole:
     Value: !GetAtt NginxRole.Arn
   H2ORoleRole:
