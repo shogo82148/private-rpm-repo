@@ -290,8 +290,6 @@ Resources:
                 Action: "s3:*"
                 Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
 Outputs:
-  NginxRole:
-    Value: !GetAtt NginxRole.Arn
   H2ORoleRole:
     Value: !GetAtt H2ORole.Arn
   ServerStarterRole:
