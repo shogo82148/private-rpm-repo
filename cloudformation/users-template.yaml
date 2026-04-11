@@ -92,36 +92,6 @@ Resources:
                 Action: "s3:*"
                 Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
 
-  # https://github.com/shogo82148/redis-rpm
-  RedisRole:
-    Type: AWS::IAM::Role
-    Properties:
-      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: arn:aws:iam::053160724612:root
-            Action:
-              - "sts:AssumeRole"
-            Condition:
-              StringEquals:
-                "sts:ExternalId": shogo82148/redis-rpm
-          - Effect: Allow
-            Principal:
-              AWS: arn:aws:iam::053160724612:root
-            Action:
-              - "sts:TagSession"
-      Policies:
-        - PolicyName: upload
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action: "s3:*"
-                Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
-
   # https://github.com/shogo82148/server-starter
   ServerStarterRole:
     Type: AWS::IAM::Role
@@ -386,8 +356,6 @@ Outputs:
     Value: !GetAtt NginxRole.Arn
   H2ORoleRole:
     Value: !GetAtt H2ORole.Arn
-  RedisRole:
-    Value: !GetAtt RedisRole.Arn
   ServerStarterRole:
     Value: !GetAtt ServerStarterRole.Arn
   CloudWatchLogsAgentRole:
