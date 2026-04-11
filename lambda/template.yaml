@@ -42,13 +42,6 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
 
-  Locker:
-    Type: AWS::Serverless::SimpleTable
-    Properties:
-      PrimaryKey:
-        Name: id
-        Type: String
-
   MetadataUpdater:
     Type: AWS::Serverless::Function
     Properties:
@@ -72,13 +65,10 @@ Resources:
         - SSMParameterReadPolicy:
             # HACK: trim "/" prefix
             ParameterName: !Join ["", !Split ["^/", !Sub "^${GPGSecret}"]]
-        - DynamoDBCrudPolicy:
-            TableName: !Ref Locker
       Environment:
         Variables:
           OUTPUT_BUCKET: !Ref RPMBucket
           GPG_SECRET_KEY: !Ref GPGSecret
-          LOCKER_TABLE: !Ref Locker
     Metadata:
       DockerTag: latest
       DockerContext: ./metadata-updater
