@@ -41,7 +41,8 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/tok\
+                en.actions.githubusercontent.com"
             Action:
               - "sts:AssumeRoleWithWebIdentity"
             Condition:
@@ -67,7 +68,8 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/tok\
+                en.actions.githubusercontent.com"
             Action:
               - "sts:AssumeRoleWithWebIdentity"
             Condition:
@@ -118,23 +120,20 @@ Resources:
   OAuth2AdapterRole:
     Type: AWS::IAM::Role
     Properties:
-      # trust policy for using https://github.com/fuller-inc/actions-aws-assume-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
-              AWS: arn:aws:iam::053160724612:root
+              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/tok\
+                en.actions.githubusercontent.com"
             Action:
-              - "sts:AssumeRole"
+              - "sts:AssumeRoleWithWebIdentity"
             Condition:
               StringEquals:
-                "sts:ExternalId": shogo82148/go-nginx-oauth2-adapter
-          - Effect: Allow
-            Principal:
-              AWS: arn:aws:iam::053160724612:root
-            Action:
-              - "sts:TagSession"
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+              StringLike:
+                "token.actions.githubusercontent.com:sub": "repo:shogo82148/go-nginx-oauth2-adapter:*"
       Policies:
         - PolicyName: upload
           PolicyDocument:
@@ -213,7 +212,8 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/tok\
+                en.actions.githubusercontent.com"
             Action:
               - "sts:AssumeRoleWithWebIdentity"
             Condition:
@@ -269,7 +269,8 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/tok\
+                en.actions.githubusercontent.com"
             Action:
               - "sts:AssumeRoleWithWebIdentity"
             Condition:
