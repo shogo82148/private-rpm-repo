@@ -429,6 +429,10 @@ func (c *myContext) downloadRPM(ctx context.Context, record events.S3EventRecord
 	log.Println(string(data))
 
 	name := filepath.Join(c.input, filepath.FromSlash(record.S3.Object.URLDecodedKey))
+	rel, err := filepath.Rel(c.input, name)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", errors.New("updater: invalid object key")
+	}
 	ext := filepath.Ext(name)
 	if ext != ".rpm" {
 		return "", errSkipped
