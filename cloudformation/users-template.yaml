@@ -110,7 +110,7 @@ Resources:
               StringEquals:
                 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
               StringLike:
-                "token.actions.githubusercontent.com:sub": "repo:repo:shogo82148@1157344/mitamae-rpm@345042854:*"
+                "token.actions.githubusercontent.com:sub": "repo:shogo82148@1157344/mitamae-rpm@345042854:*"
       Policies:
         - PolicyName: upload
           PolicyDocument:
