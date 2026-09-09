@@ -101,17 +101,16 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              AWS: arn:aws:iam::053160724612:root
+              Federated:
+                !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/tok\
+                en.actions.githubusercontent.com"
             Action:
-              - "sts:AssumeRole"
+              - "sts:AssumeRoleWithWebIdentity"
             Condition:
               StringEquals:
-                "sts:ExternalId": shogo82148/mitamae-rpm
-          - Effect: Allow
-            Principal:
-              AWS: arn:aws:iam::053160724612:root
-            Action:
-              - "sts:TagSession"
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+              StringLike:
+                "token.actions.githubusercontent.com:sub": "repo:repo:shogo82148@1157344/mitamae-rpm@345042854:*"
       Policies:
         - PolicyName: upload
           PolicyDocument:
