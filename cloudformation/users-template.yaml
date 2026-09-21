@@ -291,6 +291,35 @@ Resources:
               - Effect: Allow
                 Action: "s3:*"
                 Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
+
+  # https://github.com/shogo82148/mysql-rpm
+  MySQLRpmDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated:
+                !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/tok\
+                en.actions.githubusercontent.com"
+            Action:
+              - "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+              StringLike:
+                "token.actions.githubusercontent.com:sub": "repo:shogo82148@1157344/mysql-rpm@1376915789:*"
+      Policies:
+        - PolicyName: upload
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: "s3:*"
+                Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
+
 Outputs:
   H2ORoleRole:
     Value: !GetAtt H2ORole.Arn
@@ -312,3 +341,5 @@ Outputs:
     Value: !GetAtt RdsMySQLDeployRole.Arn
   SetS3LockDeployRole:
     Value: !GetAtt SetS3LockDeployRole.Arn
+  MySQLRpmDeployRole:
+    Value: !GetAtt MySQLRpmDeployRole.Arn
