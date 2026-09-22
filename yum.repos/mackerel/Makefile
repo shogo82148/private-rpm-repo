@@ -2,9 +2,8 @@ TARGZ_FILE := mackerel.tar.gz
 IMAGE_NAME := mackerel-package
 
 .PHONY: all
-all: amazonlinux2 amazonlinux2023 almalinux8 almalinux9 almalinux10 rockylinux8 rockylinux9 rockylinux10
+all: amazonlinux2023 almalinux8 almalinux9 almalinux10 rockylinux8 rockylinux9 rockylinux10
 
-amazonlinux2: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2
 amazonlinux2023: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2023
 almalinux8: IMAGE_NAME := $(IMAGE_NAME)-almalinux8
 almalinux9: IMAGE_NAME := $(IMAGE_NAME)-almalinux9
@@ -12,9 +11,6 @@ almalinux10: IMAGE_NAME := $(IMAGE_NAME)-almalinux10
 rockylinux8: IMAGE_NAME := $(IMAGE_NAME)-rockylinux8
 rockylinux9: IMAGE_NAME := $(IMAGE_NAME)-rockylinux9
 rockylinux10: IMAGE_NAME := $(IMAGE_NAME)-rockylinux10
-
-.PHONY: amazonlinux2
-amazonlinux2: amazonlinux2.build
 
 .PHONY: amazonlinux2023
 amazonlinux2023: amazonlinux2023.build
@@ -37,7 +33,7 @@ rockylinux9: rockylinux9.build
 .PHONY: rockylinux10
 rockylinux10: rockylinux10.build
 
-%.build: rpmbuild/SPECS/mackerel.spec rpmbuild/SOURCES/mackerel-rhel.repo rpmbuild/SOURCES/mackerel-amzn2.repo rpmbuild/SOURCES/mackerel-amzn2023.repo
+%.build: rpmbuild/SPECS/mackerel.spec rpmbuild/SOURCES/mackerel-rhel.repo rpmbuild/SOURCES/mackerel-amzn2023.repo
 	[ -d $@.bak ] && rm -rf $@.bak || :
 	[ -d $@ ] && mv $@ $@.bak || :
 	docker build --file Dockerfile.$* -t $(IMAGE_NAME) .

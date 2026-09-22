@@ -21,7 +21,6 @@ jobs:
       fail-fast: false
       matrix:
         distribution:
-          - amazonlinux2
           - amazonlinux2023
           - almalinux8
           - almalinux9
