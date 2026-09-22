@@ -14,10 +14,10 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"uuid"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
@@ -133,7 +133,8 @@ func newHandler(ctx context.Context) (*handler, error) {
 }
 
 func (h *handler) handleEvent(ctx context.Context, event events.S3Event) error {
-	ctx = ctxslog.WithAttrs(ctx, slog.String("request_id", uuid.New().String()))
+	lc, _ := lambdacontext.FromContext(ctx)
+	ctx = ctxslog.WithAttrs(ctx, slog.String("request_id", lc.AwsRequestID))
 
 	c, err := h.newContext(event)
 	if err != nil {
