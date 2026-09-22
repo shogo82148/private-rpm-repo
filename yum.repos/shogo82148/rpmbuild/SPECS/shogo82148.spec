@@ -21,7 +21,7 @@
 %endif
 
 Name:           shogo82148
-Version:        1.0.8
+Version:        1.0.9
 Release:        1%{?dist}
 Summary:        shogo82148's Original Packages
 
@@ -70,6 +70,9 @@ rm -rf $RPM_BUILD_ROOT
 /etc/pki/rpm-gpg/*
 
 %changelog
+* Tue Sep 22 2026 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.9-1
+- Update for Amazon Linux 2027
+
 * Sat Apr 04 2026 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.8-1
 - Add AlmaLinux 10
 - Add Rocky Linux 10
