@@ -3,6 +3,7 @@ IMAGE_NAME := shogo82148-package
 
 amazonlinux2: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2
 amazonlinux2023: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2023
+amazonlinux2027: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2027
 almalinux8: IMAGE_NAME := $(IMAGE_NAME)-almalinux8
 almalinux9: IMAGE_NAME := $(IMAGE_NAME)-almalinux9
 almalinux10: IMAGE_NAME := $(IMAGE_NAME)-almalinux10
