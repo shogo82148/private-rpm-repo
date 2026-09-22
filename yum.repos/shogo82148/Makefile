@@ -10,13 +10,16 @@ rockylinux8: IMAGE_NAME := $(IMAGE_NAME)-rockylinux8
 rockylinux9: IMAGE_NAME := $(IMAGE_NAME)-rockylinux9
 rockylinux10: IMAGE_NAME := $(IMAGE_NAME)-rockylinux10
 
-all: amazonlinux2 amazonlinux2023 almalinux8 almalinux9 almalinux10 rockylinux8 rockylinux9 rockylinux10
+all: amazonlinux2 amazonlinux2023 amazonlinux2027 almalinux8 almalinux9 almalinux10 rockylinux8 rockylinux9 rockylinux10
 
 .PHONY: amazonlinux2
 amazonlinux2: amazonlinux2.build
 
 .PHONY: amazonlinux2023
 amazonlinux2023: amazonlinux2023.build
+
+.PHONY: amazonlinux2027
+amazonlinux2027: amazonlinux2027.build
 
 .PHONY: almalinux8
 almalinux8: almalinux8.build
