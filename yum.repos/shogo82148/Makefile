@@ -1,7 +1,6 @@
 TARGZ_FILE := shogo82148.tar.gz
 IMAGE_NAME := shogo82148-package
 
-amazonlinux2: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2
 amazonlinux2023: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2023
 amazonlinux2027: IMAGE_NAME := $(IMAGE_NAME)-amazonlinux2027
 almalinux8: IMAGE_NAME := $(IMAGE_NAME)-almalinux8
@@ -11,10 +10,7 @@ rockylinux8: IMAGE_NAME := $(IMAGE_NAME)-rockylinux8
 rockylinux9: IMAGE_NAME := $(IMAGE_NAME)-rockylinux9
 rockylinux10: IMAGE_NAME := $(IMAGE_NAME)-rockylinux10
 
-all: amazonlinux2 amazonlinux2023 amazonlinux2027 almalinux8 almalinux9 almalinux10 rockylinux8 rockylinux9 rockylinux10
-
-.PHONY: amazonlinux2
-amazonlinux2: amazonlinux2.build
+all: amazonlinux2023 amazonlinux2027 almalinux8 almalinux9 almalinux10 rockylinux8 rockylinux9 rockylinux10
 
 .PHONY: amazonlinux2023
 amazonlinux2023: amazonlinux2023.build
