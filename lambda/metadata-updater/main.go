@@ -303,6 +303,8 @@ func (c *myContext) configureGPG(ctx context.Context) error {
 }
 
 func (c *myContext) importGPGSecret(ctx context.Context) error {
+	slog.InfoContext(ctx, "importing GPG secret")
+
 	out, err := c.handler.ssmsvc.GetParameter(ctx, &ssm.GetParameterInput{
 		Name:           aws.String(c.handler.secretParamPath),
 		WithDecryption: aws.Bool(true),
@@ -317,15 +319,18 @@ func (c *myContext) importGPGSecret(ctx context.Context) error {
 		return err
 	}
 
+	var buf bytes.Buffer
 	cmd := exec.CommandContext(ctx, c.handler.gpg, "--import", key)
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
 	cmd.Env = []string{
 		"HOME=" + c.home,
 	}
 	if err := cmd.Run(); err != nil {
-		return err
+		slog.ErrorContext(ctx, "failed to import GPG secret", "error", err, "output", buf.String())
+		return fmt.Errorf("failed to import GPG secret: %w", err)
 	}
+	slog.InfoContext(ctx, "imported GPG secret", "output", buf.String())
 	return nil
 }
 
@@ -576,16 +581,20 @@ func (c *myContext) downloadMetadata(ctx context.Context, repo string) error {
 }
 
 func (c *myContext) createEmptyRepo(ctx context.Context, repo string) error {
+	slog.InfoContext(ctx, "creating empty repo", "repo", repo)
 	path := filepath.Join(c.base, repo)
 	if err := os.MkdirAll(path, 0700); err != nil {
 		return err
 	}
+	var buf bytes.Buffer
 	cmd := exec.CommandContext(ctx, c.handler.createrepo, path)
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
 	if err := cmd.Run(); err != nil {
-		return err
+		slog.ErrorContext(ctx, "failed to create empty repo", "repo", repo, "error", err, "output", buf.String())
+		return fmt.Errorf("failed to create empty repo: %w", err)
 	}
+	slog.InfoContext(ctx, "successfully created empty repo", "repo", repo)
 	return nil
 }
 
