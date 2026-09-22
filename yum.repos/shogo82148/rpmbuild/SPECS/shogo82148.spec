@@ -43,7 +43,7 @@ This package contains shogo82148 (ICHINOSE Shogo) repository GPG key and configu
 
 sed -e 's|__REPONAME__|'%{repo_name}'|g' < %{SOURCE1} > shogo82148.repo
 
-%if 0%{?amzn} >= 2022
+%if 0%{?amzn}
 sed -e 's|$releasever|'%{?amzn}'|g' < shogo82148.repo > shogo82148.repo.tmp
 mv shogo82148.repo.tmp shogo82148.repo
 %endif
@@ -72,6 +72,7 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Tue Sep 22 2026 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.9-1
 - Update for Amazon Linux 2027
+- Drop Amazon Linux 2 support
 
 * Sat Apr 04 2026 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.8-1
 - Add AlmaLinux 10
