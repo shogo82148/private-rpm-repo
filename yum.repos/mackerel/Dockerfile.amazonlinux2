@@ -1,5 +1,5 @@
 FROM amazonlinux:2
-ENV HOME /
+ENV HOME=/
 RUN yum update -y
 RUN yum install -y rpm-build redhat-rpm-config rpmdevtools make
 RUN rpmdev-setuptree

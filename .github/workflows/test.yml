@@ -17,12 +17,26 @@ jobs:
 
   mackerel:
     runs-on: ubuntu-26.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        distribution:
+          - amazonlinux2
+          - amazonlinux2023
+          - almalinux8
+          - almalinux9
+          - almalinux10
+          - rockylinux8
+          - rockylinux9
+          - rockylinux10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: build
         run: |
-          make all
+          make "$DISTRIBUTION"
         working-directory: "yum.repos/mackerel"
+        env:
+          DISTRIBUTION: ${{ matrix.distribution }}
 
   shogo82148:
     runs-on: ubuntu-26.04-arm
