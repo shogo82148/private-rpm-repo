@@ -49,7 +49,9 @@ Resources:
       Architectures:
         - arm64
       Timeout: 900
-      MemorySize: 512
+      MemorySize: 1024
+      EphemeralStorage:
+        Size: 10240
       Events:
         S3Event:
           Type: S3
