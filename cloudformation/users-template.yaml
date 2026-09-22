@@ -196,8 +196,67 @@ Resources:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
-                Action: "s3:*"
-                Resource: arn:aws:s3:::shogo82148-rpm-temporary/*
+                Action:
+                  - s3:PutObject
+                  - s3:PutObjectAcl
+                  - s3:AbortMultipartUpload
+                  - s3:ListMultipartUploadParts
+                Resource:
+                  - arn:aws:s3:::shogo82148-rpm-temporary/amazonlinux/2027/x86_64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/amazonlinux/2027/aarch64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/amazonlinux/2027/noarch/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/amazonlinux/2023/x86_64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/amazonlinux/2023/aarch64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/amazonlinux/2023/noarch/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/almalinux/10/x86_64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/almalinux/10/aarch64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/almalinux/10/noarch/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/almalinux/9/x86_64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/almalinux/9/aarch64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/almalinux/9/noarch/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/almalinux/8/x86_64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/almalinux/8/aarch64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/almalinux/8/noarch/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/rockylinux/10/x86_64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/rockylinux/10/aarch64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/rockylinux/10/noarch/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/rockylinux/9/x86_64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/rockylinux/9/aarch64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/rockylinux/9/noarch/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/rockylinux/8/x86_64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/rockylinux/8/aarch64/schemalex-deploy/*
+                  - arn:aws:s3:::shogo82148-rpm-temporary/rockylinux/8/noarch/schemalex-deploy/*
+              - Effect: Allow
+                Action:
+                  - "s3:ListBucket"
+                Resource: arn:aws:s3:::shogo82148-rpm-temporary
+                Condition:
+                  StringLike:
+                    "s3:prefix":
+                      - amazonlinux/2027/x86_64/schemalex-deploy/*
+                      - amazonlinux/2027/aarch64/schemalex-deploy/*
+                      - amazonlinux/2027/noarch/schemalex-deploy/*
+                      - amazonlinux/2023/x86_64/schemalex-deploy/*
+                      - amazonlinux/2023/aarch64/schemalex-deploy/*
+                      - amazonlinux/2023/noarch/schemalex-deploy/*
+                      - almalinux/10/x86_64/schemalex-deploy/*
+                      - almalinux/10/aarch64/schemalex-deploy/*
+                      - almalinux/10/noarch/schemalex-deploy/*
+                      - almalinux/9/x86_64/schemalex-deploy/*
+                      - almalinux/9/aarch64/schemalex-deploy/*
+                      - almalinux/9/noarch/schemalex-deploy/*
+                      - almalinux/8/x86_64/schemalex-deploy/*
+                      - almalinux/8/aarch64/schemalex-deploy/*
+                      - almalinux/8/noarch/schemalex-deploy/*
+                      - rockylinux/10/x86_64/schemalex-deploy/*
+                      - rockylinux/10/aarch64/schemalex-deploy/*
+                      - rockylinux/10/noarch/schemalex-deploy/*
+                      - rockylinux/9/x86_64/schemalex-deploy/*
+                      - rockylinux/9/aarch64/schemalex-deploy/*
+                      - rockylinux/9/noarch/schemalex-deploy/*
+                      - rockylinux/8/x86_64/schemalex-deploy/*
+                      - rockylinux/8/aarch64/schemalex-deploy/*
+                      - rockylinux/8/noarch/schemalex-deploy/*
 
   # https://github.com/shogo82148/s3cli-mini
   S3cliMiniDeployRole:
