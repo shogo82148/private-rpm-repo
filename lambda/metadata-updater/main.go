@@ -442,7 +442,11 @@ func (c *myContext) downloadRPM(ctx context.Context, record events.S3EventRecord
 	}
 	slog.InfoContext(ctx, "handling a record", "record", string(data))
 
-	name := filepath.Join(c.input, filepath.FromSlash(record.S3.Object.URLDecodedKey))
+	key := record.S3.Object.URLDecodedKey
+	if !validKey(key) {
+		return "", errSkipped
+	}
+	name := filepath.Join(c.input, filepath.FromSlash(key))
 	ext := filepath.Ext(name)
 	if ext != ".rpm" {
 		return "", errSkipped
@@ -748,6 +752,17 @@ func (c *myContext) uploadRPM(ctx context.Context, repo string) error {
 		}
 		return nil
 	})
+}
+
+func validKey(key string) bool {
+	if key == "" {
+		return false
+	}
+	if strings.Contains(key, "..") {
+		return false
+	}
+
+	return true
 }
 
 func main() {
