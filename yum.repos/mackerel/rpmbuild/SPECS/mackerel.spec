@@ -8,8 +8,7 @@ License:        MIT
 
 URL:            https://github.com/shogo82148
 Source0:        mackerel-rhel.repo
-Source1:        mackerel-amzn2.repo
-Source2:        mackerel-amzn2023.repo
+Source1:        mackerel-amzn2023.repo
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -20,9 +19,7 @@ This package contains mackerel.io repository configuration files.
 
 %prep
 
-%if 0%{?amzn} == 2023
-cp %{SOURCE2} mackerel.repo
-%elif 0%{?amzn} == 2
+%if 0%{?amzn}
 cp %{SOURCE1} mackerel.repo
 %else
 cp %{SOURCE0} mackerel.repo
@@ -47,6 +44,7 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Tue Sep 22 2026 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.1-1
 - Add support for Amazon Linux 2023, AlmaLinux 9 and 10, Rocky Linux 9 and 10
+- Drop support for Amazon Linux 2
 
 * Mon Mar 22 2021 Ichinose Shogo <shogo82148@gmail.com> - 1.0.0-1
 - Create Package
