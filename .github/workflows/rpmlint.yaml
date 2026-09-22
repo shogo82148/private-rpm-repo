@@ -1,0 +1,16 @@
+name: rpmlint
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  rpmlint:
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shogo82148/actions-rpmlint@v0
+        with:
+          rpmlint_flags: "yum.repos/mackerel/rpmbuild/SPECS/mackerel.spec yum.repos/mackerel/rpmbuild/SPECS/mackerel.spec"
