@@ -14,4 +14,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: shogo82148/actions-rpmlint@d8c2b851ff6b5bf3da9f23fe60aab67553f4406a # v0.2.1
         with:
-          rpmlint_flags: "yum.repos/mackerel/rpmbuild/SPECS/mackerel.spec yum.repos/mackerel/rpmbuild/SPECS/mackerel.spec"
+          rpmlint_flags: "yum.repos/mackerel/rpmbuild/SPECS/mackerel.spec"
+
+      - uses: shogo82148/actions-rpmlint@d8c2b851ff6b5bf3da9f23fe60aab67553f4406a # v0.2.1
+        with:
+          rpmlint_flags: "yum.repos/mackerel/rpmbuild/SPECS/mackerel.spec"
