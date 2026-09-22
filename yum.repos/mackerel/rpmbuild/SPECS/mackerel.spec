@@ -34,8 +34,7 @@ rm -rf $RPM_BUILD_ROOT
 install -dm 755 $RPM_BUILD_ROOT%{_sysconfdir}/yum.repos.d
 install -pm 644 mackerel.repo $RPM_BUILD_ROOT%{_sysconfdir}/yum.repos.d
 
-%clean
-rm -rf $RPM_BUILD_ROOT
+%check
 
 %files
 %defattr(-,root,root,-)

@@ -61,8 +61,7 @@ install -pm 644 %{SOURCE0} $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg
 install -dm 755 $RPM_BUILD_ROOT%{_sysconfdir}/yum.repos.d
 install -pm 644 shogo82148.repo $RPM_BUILD_ROOT%{_sysconfdir}/yum.repos.d
 
-%clean
-rm -rf $RPM_BUILD_ROOT
+%check
 
 %files
 %defattr(-,root,root,-)
