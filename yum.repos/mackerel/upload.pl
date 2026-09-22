@@ -6,6 +6,8 @@ use warnings;
 use FindBin;
 use File::Basename;
 
+my $status = 0;
+
 sub execute {
     my @arg = @_;
     my $cmd = join " ", @arg;
@@ -13,6 +15,7 @@ sub execute {
     my $ret = system(@arg);
     if ($ret != 0) {
         print STDERR "::warning::failed to execute $cmd";
+        $status = 1;
     }
 }
 
@@ -34,6 +37,12 @@ sub upload {
 }
 
 upload "amazonlinux2", "amazonlinux/2";
-upload "centos7", "centos/7";
+upload "amazonlinux2023", "amazonlinux/2023";
 upload "almalinux8", "almalinux/8";
+upload "almalinux9", "almalinux/9";
+upload "almalinux10", "almalinux/10";
 upload "rockylinux8", "rockylinux/8";
+upload "rockylinux9", "rockylinux/9";
+upload "rockylinux10", "rockylinux/10";
+
+exit $status;
