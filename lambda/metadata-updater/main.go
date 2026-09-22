@@ -1,17 +1,20 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
-	"log"
+	"fmt"
+	"log/slog"
 	"mime"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"uuid"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -22,6 +25,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/smithy-go"
+	"github.com/shogo82148/ctxslog"
 	"github.com/shogo82148/sets3lock"
 )
 
@@ -66,7 +70,6 @@ var errSkipped = errors.New("updater: file skipped")
 
 type handler struct {
 	outputBucket string
-	lockTable    string
 
 	// the parameter path for GPG secret key
 	secretParamPath string
@@ -130,14 +133,16 @@ func newHandler(ctx context.Context) (*handler, error) {
 }
 
 func (h *handler) handleEvent(ctx context.Context, event events.S3Event) error {
+	ctx = ctxslog.WithAttrs(ctx, slog.String("request_id", uuid.New().String()))
+
 	c, err := h.newContext(event)
 	if err != nil {
-		log.Println(err)
+		slog.ErrorContext(ctx, "failed to initialize the context", "error", err)
 		return err
 	}
 	defer c.Cleanup()
 	if err := c.handle(ctx); err != nil {
-		log.Println(err)
+		slog.ErrorContext(ctx, "failed to handle the event", "error", err)
 		return err
 	}
 	return nil
@@ -151,25 +156,25 @@ func (h *handler) newContext(event events.S3Event) (*myContext, error) {
 
 	home := filepath.Join(dir, "home")
 	if err := os.MkdirAll(home, 0700); err != nil {
-		os.RemoveAll(dir)
+		_ = os.RemoveAll(dir)
 		return nil, err
 	}
 
 	base := filepath.Join(dir, "base")
 	if err := os.MkdirAll(base, 0700); err != nil {
-		os.RemoveAll(dir)
+		_ = os.RemoveAll(dir)
 		return nil, err
 	}
 
 	input := filepath.Join(dir, "input")
 	if err := os.MkdirAll(input, 0700); err != nil {
-		os.RemoveAll(dir)
+		_ = os.RemoveAll(dir)
 		return nil, err
 	}
 
 	output := filepath.Join(dir, "output")
 	if err := os.MkdirAll(output, 0700); err != nil {
-		os.RemoveAll(dir)
+		_ = os.RemoveAll(dir)
 		return nil, err
 	}
 
@@ -248,30 +253,30 @@ func (c *myContext) handleRepo(ctx context.Context, repo string) error {
 	}
 	defer func() {
 		if err := locker.UnlockWithErr(ctx); err != nil {
-			log.Printf("failed to unlock repo %s: %v", repo, err)
+			slog.ErrorContext(ctx, "failed to unlock repo", "repo", repo, "error", err)
 		}
 	}()
 
 	if err := c.createrepo(ctx, repo); err != nil {
-		return err
+		return fmt.Errorf("failed to createrepo: %w", err)
 	}
 	if err := c.downloadMetadata(ctx, repo); err != nil {
-		return err
+		return fmt.Errorf("failed to download metadata: %w", err)
 	}
 	if err := c.mergerepo(ctx, repo); err != nil {
-		return err
+		return fmt.Errorf("failed to merge repository: %w", err)
 	}
 	if err := c.uploadRPM(ctx, repo); err != nil {
-		return err
+		return fmt.Errorf("failed to upload RPM: %w", err)
 	}
 	if err := c.uploadMetadata(ctx, repo); err != nil {
-		return err
+		return fmt.Errorf("failed to upload metadata: %w", err)
 	}
 	return nil
 }
 
 func (c *myContext) Cleanup() {
-	os.RemoveAll(c.dir)
+	_ = os.RemoveAll(c.dir)
 }
 
 func (c *myContext) configureGPG(ctx context.Context) error {
@@ -406,17 +411,20 @@ func unescape(str string) string {
 }
 
 func (c *myContext) signRPM(ctx context.Context, name string) error {
-	log.Printf("signing %s", name)
+	slog.InfoContext(ctx, "signing to rpm", "name", name)
 
+	var buf bytes.Buffer
 	cmd := exec.CommandContext(ctx, c.handler.rpm, "--addsign", name)
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
 	cmd.Env = []string{
 		"HOME=" + c.home,
 	}
 	if err := cmd.Run(); err != nil {
+		slog.ErrorContext(ctx, "failed to sign rpm", "name", name, "error", err, "output", buf.String())
 		return err
 	}
+	slog.InfoContext(ctx, "signed rpm", "name", name, "output", buf.String())
 	return nil
 }
 
@@ -426,7 +434,7 @@ func (c *myContext) downloadRPM(ctx context.Context, record events.S3EventRecord
 	if err != nil {
 		return "", err
 	}
-	log.Println(string(data))
+	slog.InfoContext(ctx, "handling a record", "record", string(data))
 
 	name := filepath.Join(c.input, filepath.FromSlash(record.S3.Object.URLDecodedKey))
 	ext := filepath.Ext(name)
@@ -443,7 +451,7 @@ func (c *myContext) downloadRPM(ctx context.Context, record events.S3EventRecord
 		return "", err
 	}
 
-	log.Printf("downloading %s from %s", record.S3.Object.Key, record.S3.Bucket.Name)
+	slog.InfoContext(ctx, "download rpm", "key", record.S3.Object.Key, "bucket", record.S3.Bucket.Name)
 	_, err = c.handler.s3transfer.DownloadObject(ctx, &transfermanager.DownloadObjectInput{
 		Bucket:   new(record.S3.Bucket.Name),
 		Key:      new(record.S3.Object.Key),
@@ -505,7 +513,7 @@ type location struct {
 }
 
 func (c *myContext) downloadMetadata(ctx context.Context, repo string) error {
-	log.Printf("download metadata for %s", repo)
+	slog.InfoContext(ctx, "download metadata", "repo", repo)
 
 	path := filepath.Join(c.base, repo, "repodata", "repomd.xml")
 	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
@@ -516,7 +524,7 @@ func (c *myContext) downloadMetadata(ctx context.Context, repo string) error {
 		return err
 	}
 	key := filepath.ToSlash(filepath.Join(repo, "repodata", "repomd.xml"))
-	log.Printf("download %s from %s", key, c.handler.outputBucket)
+	slog.InfoContext(ctx, "download metadata file", "key", key, "bucket", c.handler.outputBucket)
 	_, err = c.handler.s3transfer.DownloadObject(ctx, &transfermanager.DownloadObjectInput{
 		Bucket:   new(c.handler.outputBucket),
 		Key:      new(key),
@@ -526,12 +534,12 @@ func (c *myContext) downloadMetadata(ctx context.Context, repo string) error {
 		err = err1
 	}
 	if err != nil {
-		var ae smithy.APIError
-		if errors.As(err, &ae) && ae.ErrorCode() == "NoSuchKey" {
+		if ae, ok := errors.AsType[smithy.APIError](err); ok && ae.ErrorCode() == "NoSuchKey" {
 			// it might be first S3 event.
 			// initialize the repository.
 			return c.createEmptyRepo(ctx, repo)
 		}
+		return fmt.Errorf("failed to download repomd.xml: %w", err)
 	}
 
 	data, err := os.ReadFile(path)
@@ -550,7 +558,7 @@ func (c *myContext) downloadMetadata(ctx context.Context, repo string) error {
 		if err != nil {
 			return err
 		}
-		log.Printf("download %s from %s", key, c.handler.outputBucket)
+		slog.InfoContext(ctx, "download metadata file", "key", key, "bucket", c.handler.outputBucket)
 		_, err = c.handler.s3transfer.DownloadObject(ctx, &transfermanager.DownloadObjectInput{
 			Bucket:   new(c.handler.outputBucket),
 			Key:      new(key),
@@ -560,7 +568,7 @@ func (c *myContext) downloadMetadata(ctx context.Context, repo string) error {
 			err = err1
 		}
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to download %s: %w", key, err)
 		}
 	}
 
@@ -582,35 +590,43 @@ func (c *myContext) createEmptyRepo(ctx context.Context, repo string) error {
 }
 
 func (c *myContext) createrepo(ctx context.Context, repo string) error {
-	log.Printf("create repository for %s", repo)
+	slog.InfoContext(ctx, "creating repository", "repo", repo)
+
+	var buf bytes.Buffer
 	path := filepath.Join(c.input, repo)
 	cmd := exec.CommandContext(ctx, c.handler.createrepo, path)
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
 	if err := cmd.Run(); err != nil {
+		slog.ErrorContext(ctx, "failed to create repository", "repo", repo, "error", err, "output", buf.String())
 		return err
 	}
+	slog.InfoContext(ctx, "successfully created repository", "repo", repo, "output", buf.String())
 	return nil
 }
 
 func (c *myContext) mergerepo(ctx context.Context, repo string) error {
-	log.Printf("merge repository for %s", repo)
+	slog.InfoContext(ctx, "merging repository", "repo", repo)
+
+	var buf bytes.Buffer
 	repo1 := filepath.Join(c.input, repo)
 	repo2 := filepath.Join(c.base, repo)
 	out := filepath.Join(c.output, repo)
 	cmd := exec.CommandContext(
 		ctx, c.handler.mergerepo, "--database", "--omit-baseurl", "--all", "--repo", repo1, "--repo", repo2, "--outputdir", out,
 	)
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
 	if err := cmd.Run(); err != nil {
+		slog.ErrorContext(ctx, "failed to merge repository", "repo", repo, "error", err, "output", buf.String())
 		return err
 	}
+	slog.InfoContext(ctx, "successfully merged repository", "repo", repo, "output", buf.String())
 	return nil
 }
 
 func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
-	log.Printf("upload metadata for %s", repo)
+	slog.InfoContext(ctx, "uploading metadata", "repo", repo)
 	dir := c.output
 	root := filepath.Join(c.output, repo, "repodata")
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
@@ -639,7 +655,7 @@ func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
 
 		key := filepath.ToSlash(rel)
 		ext := filepath.Ext(path)
-		log.Printf("uploading %s to %s", key, c.handler.outputBucket)
+		slog.InfoContext(ctx, "uploading metadata file", "key", key, "bucket", c.handler.outputBucket)
 		_, err = c.handler.s3transfer.UploadObject(ctx, &transfermanager.UploadObjectInput{
 			Bucket:      new(c.handler.outputBucket),
 			Key:         new(key),
@@ -648,7 +664,7 @@ func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
 			Body:        f,
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to upload metadata file %s: %w", key, err)
 		}
 		return nil
 	})
@@ -665,7 +681,7 @@ func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
 	defer f.Close()
 	key := filepath.ToSlash(filepath.Join(repo, "repodata", "repomd.xml"))
 	ext := filepath.Ext(".xml")
-	log.Printf("uploading %s to %s", key, c.handler.outputBucket)
+	slog.InfoContext(ctx, "uploading metadata file", "key", key, "bucket", c.handler.outputBucket)
 	_, err = c.handler.s3transfer.UploadObject(ctx, &transfermanager.UploadObjectInput{
 		Bucket:      new(c.handler.outputBucket),
 		Key:         new(key),
@@ -674,7 +690,7 @@ func (c *myContext) uploadMetadata(ctx context.Context, repo string) error {
 		Body:        f,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to upload repomd.xml for repo %s: %w", repo, err)
 	}
 
 	return nil
@@ -709,7 +725,7 @@ func (c *myContext) uploadRPM(ctx context.Context, repo string) error {
 		defer f.Close()
 
 		key := filepath.ToSlash(rel)
-		log.Printf("uploading %s to %s", key, c.handler.outputBucket)
+		slog.InfoContext(ctx, "uploading rpm file", "key", key, "bucket", c.handler.outputBucket)
 		_, err = c.handler.s3transfer.UploadObject(ctx, &transfermanager.UploadObjectInput{
 			Bucket:      new(c.handler.outputBucket),
 			Key:         new(key),
@@ -718,16 +734,22 @@ func (c *myContext) uploadRPM(ctx context.Context, repo string) error {
 			Body:        f,
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to upload rpm file %s: %w", key, err)
 		}
 		return nil
 	})
 }
 
 func main() {
-	h, err := newHandler(context.Background())
+	// configure the structured logger
+	logHandler := ctxslog.New(slog.NewJSONHandler(os.Stderr, nil))
+	slog.SetDefault(slog.New(logHandler))
+
+	ctx := context.Background()
+	h, err := newHandler(ctx)
 	if err != nil {
-		log.Fatal(err)
+		slog.ErrorContext(ctx, "failed to initialize the handler", "error", err)
+		os.Exit(1)
 	}
 	lambda.Start(h.handleEvent)
 }

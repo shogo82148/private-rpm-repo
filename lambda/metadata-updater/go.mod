@@ -1,6 +1,8 @@
 module main
 
-go 1.26.0
+go 1.27.0
+
+toolchain go1.27.1
 
 require (
 	github.com/aws/aws-lambda-go v1.55.1
@@ -10,6 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.113.1
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.78.0
 	github.com/aws/smithy-go v1.28.2
+	github.com/shogo82148/ctxslog v0.0.3
 	github.com/shogo82148/sets3lock v0.1.0
 )
 
