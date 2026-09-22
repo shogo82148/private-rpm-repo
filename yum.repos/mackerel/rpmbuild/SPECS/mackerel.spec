@@ -46,6 +46,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Tue Sep 22 2026 ICHINOSE Shogo <shogo82148@gmail.com> - 1.0.1-1
+- Add support for Amazon Linux 2023, AlmaLinux 9 and 10, Rocky Linux 9 and 10
 
 * Mon Mar 22 2021 Ichinose Shogo <shogo82148@gmail.com> - 1.0.0-1
 - Create Package
