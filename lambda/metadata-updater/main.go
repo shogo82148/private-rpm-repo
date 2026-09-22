@@ -14,10 +14,10 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"uuid"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
@@ -133,7 +133,8 @@ func newHandler(ctx context.Context) (*handler, error) {
 }
 
 func (h *handler) handleEvent(ctx context.Context, event events.S3Event) error {
-	ctx = ctxslog.WithAttrs(ctx, slog.String("request_id", uuid.New().String()))
+	lc, _ := lambdacontext.FromContext(ctx)
+	ctx = ctxslog.WithAttrs(ctx, slog.String("request_id", lc.AwsRequestID))
 
 	c, err := h.newContext(event)
 	if err != nil {
@@ -303,6 +304,8 @@ func (c *myContext) configureGPG(ctx context.Context) error {
 }
 
 func (c *myContext) importGPGSecret(ctx context.Context) error {
+	slog.InfoContext(ctx, "importing GPG secret")
+
 	out, err := c.handler.ssmsvc.GetParameter(ctx, &ssm.GetParameterInput{
 		Name:           aws.String(c.handler.secretParamPath),
 		WithDecryption: aws.Bool(true),
@@ -317,15 +320,18 @@ func (c *myContext) importGPGSecret(ctx context.Context) error {
 		return err
 	}
 
+	var buf bytes.Buffer
 	cmd := exec.CommandContext(ctx, c.handler.gpg, "--import", key)
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
 	cmd.Env = []string{
 		"HOME=" + c.home,
 	}
 	if err := cmd.Run(); err != nil {
-		return err
+		slog.ErrorContext(ctx, "failed to import GPG secret", "error", err, "output", buf.String())
+		return fmt.Errorf("failed to import GPG secret: %w", err)
 	}
+	slog.InfoContext(ctx, "imported GPG secret", "output", buf.String())
 	return nil
 }
 
@@ -576,16 +582,20 @@ func (c *myContext) downloadMetadata(ctx context.Context, repo string) error {
 }
 
 func (c *myContext) createEmptyRepo(ctx context.Context, repo string) error {
+	slog.InfoContext(ctx, "creating empty repo", "repo", repo)
 	path := filepath.Join(c.base, repo)
 	if err := os.MkdirAll(path, 0700); err != nil {
 		return err
 	}
+	var buf bytes.Buffer
 	cmd := exec.CommandContext(ctx, c.handler.createrepo, path)
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
 	if err := cmd.Run(); err != nil {
-		return err
+		slog.ErrorContext(ctx, "failed to create empty repo", "repo", repo, "error", err, "output", buf.String())
+		return fmt.Errorf("failed to create empty repo: %w", err)
 	}
+	slog.InfoContext(ctx, "successfully created empty repo", "repo", repo)
 	return nil
 }
 
