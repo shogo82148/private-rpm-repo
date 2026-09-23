@@ -188,7 +188,6 @@ Resources:
             Condition:
               StringEquals:
                 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-              StringLike:
                 "token.actions.githubusercontent.com:sub": "repo:shogo82148@1157344/schemalex-deploy@385630057:environment:release"
       Policies:
         - PolicyName: upload
@@ -303,7 +302,6 @@ Resources:
             Condition:
               StringEquals:
                 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-              StringLike:
                 "token.actions.githubusercontent.com:sub": "repo:shogo82148@1157344/rdsmysql@128398244:environment:release"
       Policies:
         - PolicyName: upload
