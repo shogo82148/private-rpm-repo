@@ -12,6 +12,6 @@ jobs:
     runs-on: ubuntu-26.04-arm
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: shogo82148/actions-rpmlint@f3824a228b9bc9409b596d321d0bf25e33e32361 # v0.2.2
+      - uses: shogo82148/actions-rpmlint@73771643a176f38d98286d2652e797c20e78f941 # v0.2.3
         with:
           rpmlint_flags: "yum.repos/mackerel/rpmbuild/SPECS/mackerel.spec yum.repos/shogo82148/rpmbuild/SPECS/shogo82148.spec"
