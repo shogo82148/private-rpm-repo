@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.33.9
 	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.4.17
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.3
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.79.3
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.80.0
 	github.com/aws/smithy-go v1.28.5
 	github.com/shogo82148/ctxslog v0.0.3
 	github.com/shogo82148/sets3lock v0.1.0
